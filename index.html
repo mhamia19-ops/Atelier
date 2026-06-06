@@ -692,7 +692,7 @@ footer{
 <div class="page" id="page-planned">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div class="card-title" style="margin:0">🗓 Maintenance Préventive</div>
-    <button class="btn btn-primary" onclick="openAddPlanned()">➕ Planifier</button>
+<button class="btn btn-primary admin-only" id="btnAddPlanned" style="display:none" onclick="openAddPlanned()">➕ Planifier</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -1190,8 +1190,9 @@ function updateAuthUI() {
   const isTech = currentUser?.role === 'technician';
   
   document.getElementById('navAdmin').style.display = isAdmin ? '' : 'none';
-  document.getElementById('navAddIntervention').style.display = (isAdmin || isTech) ? '' : 'none';
+  document.getElementById('navAddIntervention').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnAddWO').style.display = (isAdmin || isTech) ? '' : 'none';
+  document.getElementById('btnAddPlanned').style.display = isAdmin ? '' : 'none';
   document.getElementById('navSuppliers').style.display = isAdmin ? '' : 'none';
   document.querySelectorAll('.login-required').forEach(el => {
     el.style.display = currentUser ? '' : 'none';
@@ -1773,6 +1774,7 @@ function renderWorkOrders() {
 }
 
 function openAddWO() {
+  if (!isAdmin) { openLogin(); return; } 
   const mSelect = document.getElementById('woMachine');
   mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
   
@@ -1824,6 +1826,7 @@ function renderPlanned() {
 }
 
 function openAddPlanned() {
+  if (!isAdmin) { openLogin(); return; }
   const mSelect = document.getElementById('pmMachine');
   mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
   openModal('plannedModal');

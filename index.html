@@ -601,7 +601,7 @@ footer{
   <button class="login-required" style="display:none" onclick="showPage('analytics')">📈 Analytiques</button>
   <button onclick="showPage('employees')">👷 Personnel</button>
   <button class="login-required" style="display:none" onclick="showPage('planned')">🗓 Préventif</button>
-  <button class="login-required" style="display:none" onclick="showPage('suppliers')">🛒 Fournisseurs</button>
+  <button class="admin-only" id="navSuppliers" style="display:none" onclick="showPage('suppliers')">🛒 Fournisseurs</button>
   <button onclick="showPage('about')">ℹ À Propos</button>
   <!-- Actions -->
   <button class="admin-only" id="navAddIntervention" style="display:none" onclick="openAddIntervention()">➕ Intervention</button>
@@ -1192,7 +1192,7 @@ function updateAuthUI() {
   document.getElementById('navAdmin').style.display = isAdmin ? '' : 'none';
   document.getElementById('navAddIntervention').style.display = (isAdmin || isTech) ? '' : 'none';
   document.getElementById('btnAddWO').style.display = (isAdmin || isTech) ? '' : 'none';
-  
+  document.getElementById('navSuppliers').style.display = isAdmin ? '' : 'none';
   document.querySelectorAll('.login-required').forEach(el => {
     el.style.display = currentUser ? '' : 'none';
   });

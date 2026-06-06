@@ -1171,20 +1171,52 @@ function doLogin(){
   updateAuthUI();
   showPage('dashboard');
 }
-function doLogout(){
+function doLogout() {
   currentUser = null;
-  updateAuthUI();
+  updateAuthUI(); // This forces a complete UI reset
   showPage('dashboard');
 }
 
 function updateAuthUI() {
   const authArea = document.getElementById('authArea');
-  if (currentUser) {
-    const roleBadge = currentUser.role === 'admin' ? '👑 Admin' : (currentUser.role === 'technician' ? '🔧 Tech' : '👁 Lecture');
+  const isLogged = !!currentUser;
+  const isAdmin = currentUser?.role === 'admin';
+  const isTech = currentUser?.role === 'technician';
+
+  // 1. Update Header Badge
+  if (isLogged) {
+    const roleBadge = isAdmin ? '👑 Admin' : (isTech ? '🔧 Tech' : '👁 Lecture');
     authArea.innerHTML = `<div class="admin-badge">${roleBadge} <button onclick="doLogout()" style="background:none;border:none;color:var(--danger);cursor:pointer;margin-left:8px;font-size:0.8rem;">✕</button></div>`;
   } else {
     authArea.innerHTML = `<button class="login-btn" onclick="openLogin()">🔒 Connexion</button>`;
   }
+  
+  // 2. Helper function to safely hide/show elements by ID
+  const toggle = (id, show) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = show ? '' : 'none';
+  };
+
+  // 3. STRICTLY ADMIN ONLY elements
+  toggle('navAdmin', isAdmin);
+  toggle('navSuppliers', isAdmin);
+  toggle('btnAddWO', isAdmin);
+  toggle('btnAddPlanned', isAdmin);
+  toggle('btnReorderPDF', isAdmin);
+
+  // 4. SWEEP: Force hide EVERY element with the 'admin-only' class if not admin
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+
+  // 5. ADMIN + TECHNICIAN elements
+  toggle('navAddIntervention', isAdmin || isTech);
+
+  // 6. ANY LOGGED IN USER (Admin, Tech, or Read-Only)
+  document.querySelectorAll('.login-required').forEach(el => {
+    el.style.display = isLogged ? '' : 'none';
+  });
+}
   
   const isAdmin = currentUser?.role === 'admin';
   const isTech = currentUser?.role === 'technician';

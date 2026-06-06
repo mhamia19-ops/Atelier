@@ -1901,7 +1901,7 @@ function renderAnalytics() {
       labels: Object.keys(machineCounts),
       datasets: [{ label: 'Interventions', data: Object.values(machineCounts), backgroundColor: '#00c8ff' }]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { responsive: true, maintainAspectRatio: true }
   });
 
   charts.downtime = new Chart(document.getElementById('chartDowntime'), {
@@ -1910,7 +1910,7 @@ function renderAnalytics() {
       labels: Object.keys(machineDowntime),
       datasets: [{ label: 'Minutes d\'arrêt', data: Object.values(machineDowntime), backgroundColor: '#ff3b5c' }]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { responsive: true, maintainAspectRatio: true }
   });
 
   charts.parts = new Chart(document.getElementById('chartParts'), {
@@ -1919,7 +1919,7 @@ function renderAnalytics() {
       labels: Object.keys(partCounts).slice(0, 5),
       datasets: [{ data: Object.values(partCounts).slice(0, 5), backgroundColor: ['#00c8ff', '#ff6b00', '#00ff9d', '#ffb800', '#ff3b5c'] }]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { responsive: true, maintainAspectRatio: true }
   });
   
   // Mock weekly trend
@@ -1929,7 +1929,7 @@ function renderAnalytics() {
       labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
       datasets: [{ label: 'Interventions', data: [2, 4, 3, 5, 2, 1, 0], borderColor: '#00ff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(0,255,157,0.1)' }]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { responsive: true, maintainAspectRatio: true }
   });
 }
 

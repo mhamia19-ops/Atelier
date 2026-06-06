@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMAO — Atelier de Maintenance</title>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- NEW: Libraries for Charts, PDF, and QR Codes -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
 <style>
 :root {
   --bg: #0a0e1a;
@@ -31,7 +37,6 @@ body{
   min-height:100vh;
   overflow-x:hidden;
 }
-/* GRID BG */
 body::before{
   content:'';
   position:fixed;inset:0;
@@ -116,6 +121,7 @@ nav{
   padding:0 24px;
   overflow-x:auto;
   position:relative;z-index:1;
+  white-space:nowrap;
 }
 nav button{
   background:none;border:none;
@@ -210,6 +216,7 @@ tr:hover td{background:rgba(0,200,255,0.03);}
 .badge-ok{background:rgba(0,255,157,0.1);color:var(--accent3);border:1px solid rgba(0,255,157,0.3);}
 .badge-warn{background:rgba(255,184,0,0.1);color:var(--warn);border:1px solid rgba(255,184,0,0.3);}
 .badge-danger{background:rgba(255,59,92,0.1);color:var(--danger);border:1px solid rgba(255,59,92,0.3);}
+.badge-info{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);}
 
 /* ===== FORMS ===== */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
@@ -236,6 +243,15 @@ tr:hover td{background:rgba(0,200,255,0.03);}
 }
 .form-group textarea{resize:vertical;min-height:80px;}
 .form-group select option{background:var(--bg3);}
+input[type="file"]::file-selector-button {
+  background: var(--bg2);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+}
 
 .btn{
   padding:10px 22px;border-radius:8px;
@@ -343,6 +359,15 @@ tr:hover td{background:rgba(0,200,255,0.03);}
   border-radius:5px;padding:2px 9px;
   font-size:0.75rem;margin:2px;
 }
+.intervention-photo {
+  margin-top: 12px;
+  max-width: 200px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.intervention-photo:hover { transform: scale(1.05); }
 
 /* ===== SEARCH BAR ===== */
 .search-bar{
@@ -516,12 +541,35 @@ footer{
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--accent);}
 
-/* responsive */
-@media(max-width:600px){
-  header{padding:0 12px;}
-  .logo{font-size:1rem;}
+/* ===== MOBILE OPTIMIZATION (Shop Floor Ready) ===== */
+@media(max-width:768px){
+  header{padding:0 12px; height: 56px;}
+  .logo{font-size:1rem; gap: 8px;}
+  .logo-icon{width:32px; height:32px; font-size:0.9rem;}
   main{padding:14px;}
-  nav button{padding:10px 12px;font-size:0.78rem;}
+  nav{padding: 0 12px;}
+  nav button{padding:12px 14px;font-size:0.75rem;}
+  
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px; }
+  .stat-value { font-size: 1.5rem; }
+  
+  .modal { width: 95%; padding: 18px; margin: 10px; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  
+  /* Larger touch targets for technicians wearing gloves */
+  input, select, textarea, button, .pers-chip, .piece-sel-item { 
+    font-size: 16px !important; 
+    min-height: 48px; 
+  }
+  .btn { width: 100%; margin-bottom: 8px; }
+  .modal-footer-btns { flex-direction: column; }
+  
+  table { font-size: 0.75rem; }
+  th, td { padding: 8px 6px; }
+  .header-right { gap: 8px; }
+  .alert-btn, .login-btn { padding: 6px 10px; font-size: 0.7rem; }
+  .admin-badge { font-size: 0.7rem; padding: 5px 8px;}
 }
 </style>
 </head>
@@ -535,11 +583,11 @@ footer{
   </div>
   <div class="header-right">
     <button class="alert-btn" onclick="openAlerts()">
-      ⚠ Alertes Stock
+      ⚠ Alertes
       <span class="alert-badge" id="alertBadge">0</span>
     </button>
     <div id="authArea">
-      <button class="login-btn" onclick="openLogin()">🔒 Connexion Admin</button>
+      <button class="login-btn" onclick="openLogin()">🔒 Connexion</button>
     </div>
   </div>
 </header>
@@ -547,13 +595,17 @@ footer{
 <!-- NAV -->
 <nav id="mainNav">
   <button class="active" onclick="showPage('dashboard')">📊 Tableau de Bord</button>
+  <button class="login-required" style="display:none" onclick="showPage('workorders')">📋 Ordres</button>
   <button onclick="showPage('stock')">📦 Stock</button>
   <button onclick="showPage('historique')">📋 Historique</button>
+  <button class="login-required" style="display:none" onclick="showPage('analytics')">📈 Analytiques</button>
   <button onclick="showPage('employees')">👷 Personnel</button>
+  <button class="login-required" style="display:none" onclick="showPage('planned')">🗓 Préventif</button>
+  <button class="login-required" style="display:none" onclick="showPage('suppliers')">🛒 Fournisseurs</button>
   <button onclick="showPage('about')">ℹ À Propos</button>
-  <!-- Admin-only -->
+  <!-- Actions -->
   <button class="admin-only" id="navAddIntervention" style="display:none" onclick="openAddIntervention()">➕ Intervention</button>
-  <button class="admin-only" id="navAdmin" style="display:none" onclick="showPage('admin')">⚙ Administration</button>
+  <button class="admin-only" id="navAdmin" style="display:none" onclick="showPage('admin')">⚙ Admin</button>
 </nav>
 
 <!-- MAIN -->
@@ -566,10 +618,24 @@ footer{
     <div class="card-title">Dernières Interventions</div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Machine</th><th>Ligne</th><th>Personnel</th><th>Durée</th><th>Pièces</th></tr></thead>
+        <thead><tr><th>Date</th><th>Machine</th><th>Ligne</th><th>Personnel</th><th>Durée</th><th>Arrêt</th><th>Pièces</th></tr></thead>
         <tbody id="dashInterventions"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- WORK ORDERS (NEW) -->
+<div class="page" id="page-workorders">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div class="card-title" style="margin:0">📋 Ordres de Travail</div>
+    <button class="btn btn-primary" id="btnAddWO" onclick="openAddWO()">➕ Nouvel Ordre</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Machine</th><th>Description</th><th>Assigné à</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody id="woTableBody"></tbody>
+    </table>
   </div>
 </div>
 
@@ -577,7 +643,10 @@ footer{
 <div class="page" id="page-stock">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div class="card-title" style="margin:0">📦 Stock des Pièces</div>
-    <input id="stockSearch" placeholder="Rechercher une pièce..." style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:0.85rem;outline:none;width:240px;" oninput="renderStock()">
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-secondary btn-sm" onclick="exportStockPDF()">📄 Export PDF</button>
+      <input id="stockSearch" placeholder="Rechercher..." style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:0.85rem;outline:none;width:200px;" oninput="renderStock()">
+    </div>
   </div>
   <div class="pieces-grid" id="piecesGrid"></div>
 </div>
@@ -589,23 +658,62 @@ footer{
     <select id="filterPers" onchange="renderHistorique()">
       <option value="">— Tout le personnel —</option>
     </select>
-    <select id="filterPiece" onchange="renderHistorique()">
-      <option value="">— Toutes pièces —</option>
-    </select>
-    <select id="filterLigne" onchange="renderHistorique()">
-      <option value="">— Toutes lignes —</option>
-    </select>
     <select id="filterMachine" onchange="renderHistorique()">
       <option value="">— Toutes machines —</option>
     </select>
     <button class="btn btn-secondary btn-sm" onclick="clearFilters()">✕ Réinitialiser</button>
+    <button class="btn btn-orange btn-sm" onclick="exportHistoriquePDF()">📄 Export PDF</button>
   </div>
   <div id="historiqueContainer"></div>
+</div>
+
+<!-- ANALYTICS (NEW) -->
+<div class="page" id="page-analytics">
+  <div class="card-title">📈 Analytiques & Tableaux de Bord</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Interventions (7j)</div><div class="stat-value" id="statWeek">0</div></div>
+    <div class="stat-card"><div class="stat-label">Temps d'arrêt total</div><div class="stat-value" id="statDowntime">0h</div></div>
+    <div class="stat-card"><div class="stat-label">MTBF Moyen</div><div class="stat-value" id="statMTBF">--</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+    <div class="card"><div class="card-title">Interventions par Semaine</div><canvas id="chartWeek"></canvas></div>
+    <div class="card"><div class="card-title">Pièces les plus utilisées</div><canvas id="chartParts"></canvas></div>
+    <div class="card"><div class="card-title">Machines les plus sollicitées</div><canvas id="chartMachines"></canvas></div>
+    <div class="card"><div class="card-title">Temps d'arrêt par Machine</div><canvas id="chartDowntime"></canvas></div>
+  </div>
 </div>
 
 <!-- EMPLOYEES -->
 <div class="page" id="page-employees">
   <div class="emp-grid" id="empGrid"></div>
+</div>
+
+<!-- PLANNED MAINTENANCE (NEW) -->
+<div class="page" id="page-planned">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div class="card-title" style="margin:0">🗓 Maintenance Préventive</div>
+    <button class="btn btn-primary" onclick="openAddPlanned()">➕ Planifier</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Machine</th><th>Tâche</th><th>Intervalle</th><th>Prochaine Échéance</th><th>Actions</th></tr></thead>
+      <tbody id="plannedTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SUPPLIERS (NEW) -->
+<div class="page" id="page-suppliers">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div class="card-title" style="margin:0">🛒 Fournisseurs</div>
+    <button class="btn btn-primary" onclick="openAddSupplier()">➕ Ajouter</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nom</th><th>Contact</th><th>Délai (Jours)</th><th>Actions</th></tr></thead>
+      <tbody id="suppliersTableBody"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ADMIN -->
@@ -617,9 +725,10 @@ footer{
       <div class="form-grid" style="grid-template-columns:1fr;">
         <div class="form-group"><label>Nom de la pièce</label><input id="newPieceName" placeholder="Ex: Roulement 6205"></div>
         <div class="form-group"><label>Catégorie</label>
-          <select id="newPieceCat">
-            <option value="">— Choisir —</option>
-          </select>
+          <select id="newPieceCat"><option value="">— Choisir —</option></select>
+        </div>
+        <div class="form-group"><label>Fournisseur</label>
+          <select id="newPieceSupplier"><option value="">— Aucun —</option></select>
         </div>
         <div class="form-group"><label>Quantité initiale</label><input type="number" id="newPieceQty" value="1" min="0"></div>
         <div class="form-group"><label>Seuil d'alerte</label><input type="number" id="newPieceThresh" value="3" min="1"></div>
@@ -652,7 +761,7 @@ footer{
     </div>
 
     <div class="card">
-      <div class="card-title">Lignes & Machines</div>
+      <div class="card-title">Lignes & Machines (QR Codes)</div>
       <div class="form-grid" style="grid-template-columns:1fr;margin-bottom:10px;">
         <div class="form-group"><label>Nouvelle Ligne</label><input id="newLigneName" placeholder="Ex: Ligne A, Ligne 1..."></div>
       </div>
@@ -717,8 +826,14 @@ footer{
 <div class="modal-overlay" id="loginModal">
   <div class="modal">
     <div class="modal-title">
-      🔒 Connexion Administrateur
+      🔒 Connexion
       <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    </div>
+    <div style="font-size:0.8rem; color:var(--text3); margin-bottom:16px; background:var(--bg3); padding:10px; border-radius:6px;">
+      <strong>Comptes de test :</strong><br>
+      👑 Admin: <code>islam</code> / <code>hammia</code><br>
+      🔧 Tech: <code>tech</code> / <code>tech</code><br>
+      👁 Lecture: <code>read</code> / <code>read</code>
     </div>
     <div class="form-group" style="margin-bottom:14px;">
       <label>Identifiant</label>
@@ -729,7 +844,7 @@ footer{
       <input type="password" id="loginPass" placeholder="••••••••">
     </div>
     <div id="loginError" style="color:var(--danger);font-size:0.82rem;margin-bottom:12px;display:none;">Identifiant ou mot de passe incorrect.</div>
-    <div style="display:flex;gap:10px;">
+    <div class="modal-footer-btns" style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="doLogin()">Se connecter</button>
       <button class="btn btn-secondary" onclick="closeModal('loginModal')">Annuler</button>
     </div>
@@ -743,6 +858,7 @@ footer{
       ⚠ Articles en Rupture / Alerte
       <button class="modal-close" onclick="closeModal('alertsModal')">✕</button>
     </div>
+    <button class="btn btn-orange" onclick="exportReorderPDF()" style="margin-bottom:16px; width:100%;">📄 Générer Demande d'Achat (PDF)</button>
     <div id="alertsList"></div>
   </div>
 </div>
@@ -766,34 +882,26 @@ footer{
       <button class="modal-close" onclick="closeModal('interventionModal')">✕</button>
     </div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>Date</label>
-        <input type="date" id="intDate">
-      </div>
-      <div class="form-group">
-        <label>Heure de début</label>
-        <input type="time" id="intTime">
-      </div>
-      <div class="form-group">
-        <label>Durée (minutes)</label>
-        <input type="number" id="intDuration" min="1" placeholder="Ex: 90">
-      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="intDate"></div>
+      <div class="form-group"><label>Heure de début</label><input type="time" id="intTime"></div>
+      <div class="form-group"><label>Durée (minutes)</label><input type="number" id="intDuration" min="1" placeholder="Ex: 90"></div>
+      <div class="form-group"><label>Temps d'arrêt (minutes)</label><input type="number" id="intDowntime" min="0" placeholder="Ex: 45"></div>
       <div class="form-group">
         <label>Ligne</label>
-        <select id="intLigne" onchange="updateMachineSelect()">
-          <option value="">— Choisir une ligne —</option>
-        </select>
+        <select id="intLigne" onchange="updateMachineSelect()"><option value="">— Choisir une ligne —</option></select>
       </div>
       <div class="form-group">
         <label>Machine</label>
-        <select id="intMachine">
-          <option value="">— Choisir une machine —</option>
-        </select>
+        <select id="intMachine"><option value="">— Choisir une machine —</option></select>
       </div>
     </div>
     <div class="form-group" style="margin-top:14px;">
       <label>Description de l'intervention</label>
       <textarea id="intDesc" placeholder="Décrire l'intervention effectuée..."></textarea>
+    </div>
+    <div class="form-group" style="margin-top:14px;">
+      <label>📸 Photo (Panne/Réparation)</label>
+      <input type="file" id="intPhoto" accept="image/*" capture="environment">
     </div>
     <div class="form-group" style="margin-top:14px;">
       <label>Personnel intervenant (sélection multiple)</label>
@@ -806,7 +914,7 @@ footer{
         <div id="selectedPiecesQty"></div>
       </div>
     </div>
-    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+    <div class="modal-footer-btns" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="saveIntervention()">Enregistrer l'intervention</button>
       <button class="btn btn-secondary" onclick="closeModal('interventionModal')">Annuler</button>
     </div>
@@ -829,22 +937,109 @@ footer{
   </div>
 </div>
 
+<!-- QR CODE MODAL -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal" style="text-align:center;">
+    <div class="modal-title">
+      <span id="qrModalTitle">QR Code Machine</span>
+      <button class="modal-close" onclick="closeModal('qrModal')">✕</button>
+    </div>
+    <canvas id="qrCanvas" style="background:#fff; padding:15px; border-radius:12px; margin: 10px auto; display:block;"></canvas>
+    <p style="font-size:0.8rem; color:var(--text3); margin-top:10px;">Scannez pour voir l'historique de la machine sur mobile.</p>
+  </div>
+</div>
+
+<!-- WORK ORDER MODAL -->
+<div class="modal-overlay" id="woModal">
+  <div class="modal">
+    <div class="modal-title">
+      ➕ Nouvel Ordre de Travail
+      <button class="modal-close" onclick="closeModal('woModal')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Machine</label>
+      <select id="woMachine"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Description de la tâche</label>
+      <textarea id="woDesc"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Assigner à</label>
+      <select id="woAssigned"></select>
+    </div>
+    <div class="modal-footer-btns" style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveWO()">Créer l'ordre</button>
+      <button class="btn btn-secondary" onclick="closeModal('woModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLANNED MAINTENANCE MODAL -->
+<div class="modal-overlay" id="plannedModal">
+  <div class="modal">
+    <div class="modal-title">
+      🗓 Planifier Maintenance
+      <button class="modal-close" onclick="closeModal('plannedModal')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Machine</label>
+      <select id="pmMachine"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Tâche à effectuer</label>
+      <input type="text" id="pmDesc" placeholder="Ex: Vidange huile, Graissage...">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Intervalle (Jours)</label>
+      <input type="number" id="pmInterval" value="90" min="1">
+    </div>
+    <div class="modal-footer-btns" style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="savePlanned()">Planifier</button>
+      <button class="btn btn-secondary" onclick="closeModal('plannedModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div class="modal-overlay" id="supplierModal">
+  <div class="modal">
+    <div class="modal-title">
+      🛒 Ajouter Fournisseur
+      <button class="modal-close" onclick="closeModal('supplierModal')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Nom</label><input type="text" id="supName"></div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Contact</label><input type="text" id="supContact"></div>
+    <div class="form-group" style="margin-bottom:20px;"><label>Délai (Jours)</label><input type="number" id="supLead" value="7"></div>
+    <div class="modal-footer-btns" style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveSupplier()">Ajouter</button>
+      <button class="btn btn-secondary" onclick="closeModal('supplierModal')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ===== SUPABASE CONFIG =====
-// 🔧 Replace these with your Supabase project URL and anon key
 const SUPABASE_URL = 'https://cuctsokaivauyulgpvfg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_nX7iYihEuJgJcqeZaxE7-g_KIgW81wL';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ===== STATE =====
-let isAdmin = false;
+let currentUser = null; // { name: '...', role: 'admin' | 'technician' | 'read_only' }
 let categories = [];
 let pieces = [];
 let employees = [];
 let interventions = [];
 let lignes = [];
 let machines = [];
+let suppliers = [];
+let workOrders = [];
+let plannedMaint = [];
+
+// Chart instances
+let charts = {};
 
 // ===== LOADING OVERLAY =====
 function showLoader(msg){
@@ -862,47 +1057,52 @@ function showLoader(msg){
 }
 function hideLoader(){const el=document.getElementById('globalLoader');if(el)el.style.display='none';}
 
-// ===== SAVE HELPERS (Supabase) =====
-async function savePieces(){
-  if(pieces.length) await sb.from('pieces').upsert(pieces,{onConflict:'id'});
+// ===== SAFE FETCH (Prevents app crash if new tables aren't created yet) =====
+async function safeFetch(table, orderCol = 'id', asc = true) {
+  try {
+    const { data, error } = await sb.from(table).select('*').order(orderCol, { ascending: asc });
+    if (error) { console.warn(`Table ${table} missing or error:`, error.message); return []; }
+    return data || [];
+  } catch (e) { return []; }
 }
-async function saveEmployees(){
-  if(employees.length) await sb.from('employees').upsert(employees,{onConflict:'id'});
-}
-async function saveInterventions(){
-  if(interventions.length) await sb.from('interventions').upsert(interventions,{onConflict:'id'});
-}
-async function saveCats(){
-  const rows=categories.map((name,i)=>({id:i+1,name}));
-  if(rows.length) await sb.from('categories').upsert(rows,{onConflict:'id'});
-}
-async function saveLignes(){
-  if(lignes.length) await sb.from('lignes').upsert(lignes,{onConflict:'id'});
-}
-async function saveMachines(){
-  if(machines.length) await sb.from('machines').upsert(machines,{onConflict:'id'});
+
+async function safeInsert(table, payload) {
+  try {
+    const { data, error } = await sb.from(table).insert([payload]).select().single();
+    if (error) { 
+      console.warn(error); 
+      alert("Erreur base de données: " + error.message + "\n(Avez-vous créé la table '" + table + "' dans Supabase ?)"); 
+      return null; 
+    }
+    return data;
+  } catch(e) { return null; }
 }
 
 // ===== LOAD ALL DATA =====
 async function loadAllData(){
   showLoader('Connexion à la base de données...');
   try{
-    const [cR,pR,eR,iR,lR,mR]=await Promise.all([
-      sb.from('categories').select('*').order('id'),
-      sb.from('pieces').select('*').order('id'),
-      sb.from('employees').select('*').order('id'),
-      sb.from('interventions').select('*').order('date',{ascending:false}),
-      sb.from('lignes').select('*').order('id'),
-      sb.from('machines').select('*').order('id'),
+    const [cR, pR, eR, iR, lR, mR] = await Promise.all([
+      sb.from('categories').select('*').order('id').then(r => r.data || []).catch(() => []),
+      sb.from('pieces').select('*').order('id').then(r => r.data || []).catch(() => []),
+      sb.from('employees').select('*').order('id').then(r => r.data || []).catch(() => []),
+      sb.from('interventions').select('*').order('date', {ascending: false}).then(r => r.data || []).catch(() => []),
+      sb.from('lignes').select('*').order('id').then(r => r.data || []).catch(() => []),
+      sb.from('machines').select('*').order('id').then(r => r.data || []).catch(() => []),
     ]);
-    if(cR.error||pR.error||eR.error||iR.error||lR.error||mR.error)
-      throw new Error('Erreur de lecture Supabase');
-    categories=(cR.data||[]).map(r=>r.name);
-    pieces=pR.data||[];
-    employees=eR.data||[];
-    interventions=iR.data||[];
-    lignes=lR.data||[];
-    machines=mR.data||[];
+    
+    categories = cR.map(r => r.name);
+    pieces = pR;
+    employees = eR;
+    interventions = iR;
+    lignes = lR;
+    machines = mR;
+
+    // Fetch new tables safely
+    suppliers = await safeFetch('suppliers');
+    workOrders = await safeFetch('work_orders', 'created_at', false);
+    plannedMaint = await safeFetch('planned_maintenance');
+
     await seedIfEmpty();
   }catch(err){
     console.error(err);
@@ -913,6 +1113,7 @@ async function loadAllData(){
   hideLoader();
   updateAlertBadge();
   renderDashboard();
+  checkURLHash(); // Check for QR code scan
 }
 
 async function seedIfEmpty(){
@@ -921,9 +1122,6 @@ async function seedIfEmpty(){
       {name:'Roulement 6205',cat:'Mécanique',qty:12,thresh:3,ref:'RLT-6205'},
       {name:'Courroie B50',cat:'Mécanique',qty:5,thresh:4,ref:'CRR-B50'},
       {name:'Disjoncteur 10A',cat:'Électrique',qty:2,thresh:3,ref:'DIS-10A'},
-      {name:'Joint torique 30mm',cat:'Pneumatique',qty:20,thresh:5,ref:'JNT-030'},
-      {name:'Huile ISO 46',cat:'Hydraulique',qty:3,thresh:2,ref:'HUI-046'},
-      {name:'Filtre à air',cat:'Pneumatique',qty:1,thresh:3,ref:'FLT-AIR'},
     ];
     const{data}=await sb.from('pieces').insert(seed).select();
     pieces=data||seed;
@@ -932,7 +1130,6 @@ async function seedIfEmpty(){
     const seed=[
       {name:'HAMMIA Islam',role:'Responsable Maintenance'},
       {name:'BENALI Karim',role:'Technicien Électrique'},
-      {name:'MEZIANI Youcef',role:'Technicien Mécanique'},
     ];
     const{data}=await sb.from('employees').insert(seed).select();
     employees=data||seed;
@@ -949,7 +1146,6 @@ async function seedIfEmpty(){
     lignes=ld||seedL;
     const seedM=[
       {name:'Tour CNC',ligne_id:lignes[0].id},
-      {name:'Convoyeur Principal',ligne_id:lignes[0].id},
       {name:'Presse Hydraulique',ligne_id:lignes[1].id},
     ];
     const{data:md}=await sb.from('machines').insert(seedM).select();
@@ -957,7 +1153,7 @@ async function seedIfEmpty(){
   }
 }
 
-// ===== AUTH =====
+// ===== AUTH & ROLES =====
 function openLogin(){
   document.getElementById('loginUser').value='';
   document.getElementById('loginPass').value='';
@@ -965,24 +1161,63 @@ function openLogin(){
   openModal('loginModal');
 }
 function doLogin(){
-  const u=document.getElementById('loginUser').value;
-  const p=document.getElementById('loginPass').value;
-  if(u==='islam'&&p==='hammia'){
-    isAdmin=true;
-    closeModal('loginModal');
-    document.getElementById('authArea').innerHTML=`<div class="admin-badge">✅ Admin connecté <button onclick="doLogout()" style="background:none;border:none;color:var(--danger);cursor:pointer;margin-left:8px;font-size:0.8rem;">✕</button></div>`;
-    document.getElementById('navAdmin').style.display='';
-    document.getElementById('navAddIntervention').style.display='';
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  
+  if(u==='islam' && p==='hammia'){
+    currentUser = { name: 'HAMMIA Islam', role: 'admin' };
+  } else if(u==='tech' && p==='tech'){
+    currentUser = { name: 'Technicien', role: 'technician' };
+  } else if(u==='read' && p==='read'){
+    currentUser = { name: 'Management', role: 'read_only' };
   } else {
     document.getElementById('loginError').style.display='block';
+    return;
   }
+  
+  closeModal('loginModal');
+  updateAuthUI();
+  showPage('dashboard');
 }
 function doLogout(){
-  isAdmin=false;
-  document.getElementById('authArea').innerHTML=`<button class="login-btn" onclick="openLogin()">🔒 Connexion Admin</button>`;
-  document.getElementById('navAdmin').style.display='none';
-  document.getElementById('navAddIntervention').style.display='none';
+  currentUser = null;
+  updateAuthUI();
   showPage('dashboard');
+}
+
+function updateAuthUI() {
+  const authArea = document.getElementById('authArea');
+  if (currentUser) {
+    const roleBadge = currentUser.role === 'admin' ? '👑 Admin' : (currentUser.role === 'technician' ? '🔧 Tech' : '👁 Lecture');
+    authArea.innerHTML = `<div class="admin-badge">${roleBadge} <button onclick="doLogout()" style="background:none;border:none;color:var(--danger);cursor:pointer;margin-left:8px;font-size:0.8rem;">✕</button></div>`;
+  } else {
+    authArea.innerHTML = `<button class="login-btn" onclick="openLogin()">🔒 Connexion</button>`;
+  }
+  
+  const isAdmin = currentUser?.role === 'admin';
+  const isTech = currentUser?.role === 'technician';
+  
+  document.getElementById('navAdmin').style.display = isAdmin ? '' : 'none';
+  document.getElementById('navAddIntervention').style.display = (isAdmin || isTech) ? '' : 'none';
+  document.getElementById('btnAddWO').style.display = (isAdmin || isTech) ? '' : 'none';
+  
+  document.querySelectorAll('.login-required').forEach(el => {
+    el.style.display = currentUser ? '' : 'none';
+  });
+  
+  // Hide edit/delete buttons if read-only
+  document.querySelectorAll('.admin-action').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+}
+
+function checkPerm(action) {
+  if (!currentUser) return false;
+  if (currentUser.role === 'admin') return true;
+  if (currentUser.role === 'technician') {
+    return ['add_intervention', 'view_wo', 'update_wo'].includes(action);
+  }
+  return false; 
 }
 
 // ===== NAVIGATION =====
@@ -990,22 +1225,28 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  // match nav
-  const navMap={dashboard:0,stock:1,historique:2,employees:3,about:4};
-  if(navMap[id]!==undefined) document.querySelectorAll('nav button')[navMap[id]].classList.add('active');
-  // render
+  
+  const navButtons = document.querySelectorAll('nav button');
+  navButtons.forEach(b => {
+    if(b.getAttribute('onclick') === `showPage('${id}')`) b.classList.add('active');
+  });
+
   if(id==='dashboard') renderDashboard();
   if(id==='stock') renderStock();
   if(id==='historique') renderHistorique();
   if(id==='employees') renderEmployees();
   if(id==='admin') renderAdmin();
+  if(id==='workorders') renderWorkOrders();
+  if(id==='analytics') renderAnalytics();
+  if(id==='planned') renderPlanned();
+  if(id==='suppliers') renderSuppliers();
 }
 
 // ===== MODAL HELPERS =====
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// ===== ALERT BADGE =====
+// ===== ALERT BADGE & REORDER PDF =====
 function updateAlertBadge(){
   const low=pieces.filter(p=>p.qty<=p.thresh);
   document.getElementById('alertBadge').textContent=low.length;
@@ -1035,27 +1276,57 @@ function openAlerts(){
   openModal('alertsModal');
 }
 
+function exportReorderPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const low = pieces.filter(p => p.qty <= p.thresh);
+  
+  doc.setFontSize(18);
+  doc.text("Demande d'Achat / Réapprovisionnement", 14, 22);
+  doc.setFontSize(10);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
+  
+  const body = low.map(p => {
+    const sup = suppliers.find(s => s.id === p.supplier_id);
+    const toOrder = p.thresh * 2 - p.qty; // Order up to double threshold
+    return [p.name, p.ref, p.qty, p.thresh, toOrder > 0 ? toOrder : 0, sup ? sup.name : 'Non défini'];
+  });
+
+  doc.autoTable({
+    head: [['Pièce', 'Réf', 'Stock Actuel', 'Seuil', 'À Commander', 'Fournisseur']],
+    body: body,
+    startY: 35,
+    theme: 'striped',
+    headStyles: { fillColor: [255, 107, 0] }
+  });
+  
+  doc.save("Demande_Achat_" + new Date().toISOString().slice(0,10) + ".pdf");
+}
+
 // ===== DASHBOARD =====
 function renderDashboard(){
   updateAlertBadge();
   const totalPieces=pieces.reduce((s,p)=>s+p.qty,0);
   const lowCount=pieces.filter(p=>p.qty<=p.thresh).length;
   const intToday=interventions.filter(i=>i.date===new Date().toISOString().slice(0,10)).length;
+  const totalDowntime = interventions.reduce((sum, i) => sum + (parseInt(i.downtime_minutes) || 0), 0);
+  
   document.getElementById('statsGrid').innerHTML=`
     <div class="stat-card"><div class="stat-label">Pièces en stock</div><div class="stat-value">${pieces.length}</div><div class="stat-sub">${totalPieces} unités totales</div></div>
     <div class="stat-card"><div class="stat-label">Alertes stock</div><div class="stat-value" style="color:var(--warn)">${lowCount}</div><div class="stat-sub">Sous le seuil d'alerte</div></div>
     <div class="stat-card"><div class="stat-label">Interventions totales</div><div class="stat-value" style="color:var(--accent3)">${interventions.length}</div><div class="stat-sub">${intToday} aujourd'hui</div></div>
-    <div class="stat-card"><div class="stat-label">Personnel</div><div class="stat-value" style="color:var(--accent2)">${employees.length}</div><div class="stat-sub">Techniciens enregistrés</div></div>
+    <div class="stat-card"><div class="stat-label">Temps d'arrêt</div><div class="stat-value" style="color:var(--danger)">${Math.round(totalDowntime/60)}h</div><div class="stat-sub">${totalDowntime} minutes</div></div>
   `;
   const recent=[...interventions].sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time)).slice(0,6);
   const tbody=document.getElementById('dashInterventions');
-  if(!recent.length){tbody.innerHTML='<tr><td colspan="6" class="empty">Aucune intervention enregistrée.</td></tr>';return;}
+  if(!recent.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Aucune intervention enregistrée.</td></tr>';return;}
   tbody.innerHTML=recent.map(i=>`<tr>
     <td>${i.date} ${i.time}</td>
     <td><strong>${i.machine||'—'}</strong></td>
     <td>${i.ligne||'—'}</td>
     <td>${(i.personnel||[]).map(n=>`<span class="personnel-chip">${n}</span>`).join('')}</td>
     <td>${i.duration} min</td>
+    <td><span class="badge ${i.downtime_minutes > 0 ? 'badge-danger' : 'badge-ok'}">${i.downtime_minutes || 0} min</span></td>
     <td>${(i.piecesUsed||i.pieces_used||[]).map(u=>`<span class="piece-chip">${u.name} x${u.qty}</span>`).join('')}</td>
   </tr>`).join('');
 }
@@ -1077,6 +1348,18 @@ function renderStock(){
   }).join('');
 }
 
+function exportStockPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Rapport de Stock", 14, 15);
+  doc.autoTable({
+    head: [['Nom', 'Catégorie', 'Réf', 'Qté', 'Seuil']],
+    body: pieces.map(p => [p.name, p.cat, p.ref, p.qty, p.thresh]),
+    startY: 20
+  });
+  doc.save("Stock_" + new Date().toISOString().slice(0,10) + ".pdf");
+}
+
 // ===== HISTORIQUE =====
 function buildHistoriqueFilters(){
   const fpEl=document.getElementById('filterPers');
@@ -1084,18 +1367,6 @@ function buildHistoriqueFilters(){
   fpEl.innerHTML='<option value="">— Tout le personnel —</option>';
   const allPers=[...new Set(interventions.flatMap(i=>i.personnel||[]))];
   allPers.forEach(n=>fpEl.innerHTML+=`<option value="${n}" ${cur1===n?'selected':''}>${n}</option>`);
-
-  const fiEl=document.getElementById('filterPiece');
-  const cur2=fiEl.value;
-  fiEl.innerHTML='<option value="">— Toutes pièces —</option>';
-  const allPieces=[...new Set(interventions.flatMap(i=>(i.piecesUsed||i.pieces_used||[]).map(u=>u.name)))];
-  allPieces.forEach(n=>fiEl.innerHTML+=`<option value="${n}" ${cur2===n?'selected':''}>${n}</option>`);
-
-  const flEl=document.getElementById('filterLigne');
-  const cur3=flEl.value;
-  flEl.innerHTML='<option value="">— Toutes lignes —</option>';
-  const allLignes=[...new Set(interventions.map(i=>i.ligne||'').filter(Boolean))];
-  allLignes.forEach(n=>flEl.innerHTML+=`<option value="${n}" ${cur3===n?'selected':''}>${n}</option>`);
 
   const fmEl=document.getElementById('filterMachine');
   const cur4=fmEl.value;
@@ -1108,15 +1379,11 @@ function renderHistorique(){
   buildHistoriqueFilters();
   const fd=document.getElementById('filterDate').value;
   const fp=document.getElementById('filterPers').value;
-  const fi=document.getElementById('filterPiece').value;
-  const fl=document.getElementById('filterLigne').value;
   const fm=document.getElementById('filterMachine').value;
 
   let filtered=interventions.filter(i=>{
     if(fd&&i.date!==fd) return false;
     if(fp&&!(i.personnel||[]).includes(fp)) return false;
-    if(fi&&!(i.piecesUsed||i.pieces_used||[]).some(u=>u.name===fi)) return false;
-    if(fl&&i.ligne!==fl) return false;
     if(fm&&i.machine!==fm) return false;
     return true;
   });
@@ -1144,26 +1411,45 @@ function renderHistorique(){
           <div class="intervention-meta">
             <div class="meta-tag">🕐 <strong>${i.time}</strong></div>
             <div class="meta-tag">⏱ <strong>${i.duration} min</strong></div>
+            <div class="meta-tag">⛔ <strong>${i.downtime_minutes || 0} min arrêt</strong></div>
             <div class="meta-tag">🏭 <strong>${i.ligne||'—'}</strong></div>
             <div class="meta-tag">⚙ <strong>${i.machine||'—'}</strong></div>
           </div>
           <div style="margin-bottom:8px;font-size:0.9rem;color:var(--text2);">${i.description||''}</div>
+          ${i.photo_url ? `<img src="${i.photo_url}" class="intervention-photo" onclick="window.open('${i.photo_url}', '_blank')">` : ''}
           <div style="margin-bottom:6px;">
             👷 Personnel : ${(i.personnel||[]).map(n=>`<span class="personnel-chip">${n}</span>`).join('') || '<em style="color:var(--text3)">—</em>'}
           </div>
-          ${(i.piecesUsed||i.pieces_used&&i.piecesUsed||i.pieces_used.length)?`<div class="pieces-used">🔩 Pièces : ${i.piecesUsed||i.pieces_used.map(u=>`<span class="piece-chip">${u.name} × ${u.qty}</span>`).join('')}</div>`:''}
-          ${isAdmin?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteIntervention('${i.id}')">🗑 Supprimer</button></div>`:''}
+          ${(i.piecesUsed||i.pieces_used&&i.piecesUsed||i.pieces_used.length)?`<div class="pieces-used">🔩 Pièces : ${(i.piecesUsed||i.pieces_used).map(u=>`<span class="piece-chip">${u.name} × ${u.qty}</span>`).join('')}</div>`:''}
+          ${checkPerm('admin')?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteIntervention('${i.id}')">🗑 Supprimer</button></div>`:''}
         </div>
       `).join('')}
     </div>
   `).join('');
 }
 
+function exportHistoriquePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Historique des Interventions", 14, 15);
+  doc.autoTable({
+    head: [['Date', 'Machine', 'Ligne', 'Personnel', 'Durée', 'Description']],
+    body: interventions.map(i => [
+      `${i.date} ${i.time}`, 
+      i.machine || '-', 
+      i.ligne || '-', 
+      (i.personnel||[]).join(', '), 
+      i.duration + ' min', 
+      i.description || '-'
+    ]),
+    startY: 20
+  });
+  doc.save("Historique_" + new Date().toISOString().slice(0,10) + ".pdf");
+}
+
 function clearFilters(){
   document.getElementById('filterDate').value='';
   document.getElementById('filterPers').value='';
-  document.getElementById('filterPiece').value='';
-  document.getElementById('filterLigne').value='';
   document.getElementById('filterMachine').value='';
   renderHistorique();
 }
@@ -1191,7 +1477,7 @@ function renderEmployees(){
       <div class="emp-avatar">${e.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
       <div class="emp-name">${e.name}</div>
       <div class="emp-role">${e.role}</div>
-      ${isAdmin?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteEmployee(${e.id})">🗑</button></div>`:''}
+      ${checkPerm('admin')?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteEmployee(${e.id})">🗑</button></div>`:''}
     </div>
   `).join('');
 }
@@ -1200,13 +1486,14 @@ async function addEmployee(){
   const name=document.getElementById('newEmpName').value.trim();
   const role=document.getElementById('newEmpRole').value.trim();
   if(!name||!role){alert('Renseignez le nom et la profession.');return;}
-  const{data,error}=await sb.from('employees').insert([{name,role}]).select().single();
-  if(error){alert('Erreur: '+error.message);return;}
-  employees.push(data);
-  document.getElementById('newEmpName').value='';
-  document.getElementById('newEmpRole').value='';
-  alert('Employé ajouté !');
-  renderEmployees();
+  const data = await safeInsert('employees', {name, role});
+  if(data) {
+    employees.push(data);
+    document.getElementById('newEmpName').value='';
+    document.getElementById('newEmpRole').value='';
+    alert('Employé ajouté !');
+    renderEmployees();
+  }
 }
 
 async function deleteEmployee(id){
@@ -1220,18 +1507,24 @@ async function deleteEmployee(id){
 async function addPiece(){
   const name=document.getElementById('newPieceName').value.trim();
   const cat=document.getElementById('newPieceCat').value;
+  const supId=document.getElementById('newPieceSupplier').value;
   const qty=parseInt(document.getElementById('newPieceQty').value)||0;
   const thresh=parseInt(document.getElementById('newPieceThresh').value)||3;
   const ref=document.getElementById('newPieceRef').value.trim()||'—';
   if(!name||!cat){alert('Renseignez le nom et la catégorie.');return;}
-  const{data,error}=await sb.from('pieces').insert([{name,cat,qty,thresh,ref}]).select().single();
-  if(error){alert('Erreur: '+error.message);return;}
-  pieces.push(data);
-  document.getElementById('newPieceName').value='';
-  document.getElementById('newPieceRef').value='';
-  document.getElementById('newPieceQty').value='1';
-  alert('Pièce ajoutée !');
-  updateAlertBadge();
+  
+  const payload = {name, cat, qty, thresh, ref};
+  if(supId) payload.supplier_id = parseInt(supId);
+  
+  const data = await safeInsert('pieces', payload);
+  if(data) {
+    pieces.push(data);
+    document.getElementById('newPieceName').value='';
+    document.getElementById('newPieceRef').value='';
+    document.getElementById('newPieceQty').value='1';
+    alert('Pièce ajoutée !');
+    updateAlertBadge();
+  }
 }
 
 function openManagePieces(){
@@ -1246,8 +1539,6 @@ function openManagePieces(){
         <button class="btn btn-secondary btn-sm" onclick="adjustQty(${p.id},-1)">−</button>
         <span id="qty_${p.id}" style="font-family:'Share Tech Mono';min-width:28px;text-align:center">${p.qty}</span>
         <button class="btn btn-secondary btn-sm" onclick="adjustQty(${p.id},1)">+</button>
-        <input type="number" id="qtyInput_${p.id}" style="width:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Exo 2',sans-serif;" value="${p.qty}" min="0">
-        <button class="btn btn-primary btn-sm" onclick="setQty(${p.id})">✓</button>
       </div>
     </td>
     <td><button class="btn btn-danger btn-sm" onclick="deletePiece(${p.id})">🗑</button></td>
@@ -1258,16 +1549,6 @@ function openManagePieces(){
 async function adjustQty(id,delta){
   const p=pieces.find(x=>x.id===id);if(!p) return;
   p.qty=Math.max(0,p.qty+delta);
-  await sb.from('pieces').update({qty:p.qty}).eq('id',id);
-  document.getElementById('qty_'+id).textContent=p.qty;
-  document.getElementById('qtyInput_'+id).value=p.qty;
-  updateAlertBadge();
-}
-
-async function setQty(id){
-  const p=pieces.find(x=>x.id===id);if(!p) return;
-  const val=parseInt(document.getElementById('qtyInput_'+id).value)||0;
-  p.qty=Math.max(0,val);
   await sb.from('pieces').update({qty:p.qty}).eq('id',id);
   document.getElementById('qty_'+id).textContent=p.qty;
   updateAlertBadge();
@@ -1317,7 +1598,52 @@ function refreshCatSelects(){
   });
 }
 
-// ===== LIGNES & MACHINES =====
+// ===== SUPPLIERS =====
+function renderSuppliers() {
+  const tbody = document.getElementById('suppliersTableBody');
+  if(!suppliers.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Aucun fournisseur.</td></tr>'; return; }
+  tbody.innerHTML = suppliers.map(s => `
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.contact || '-'}</td>
+      <td>${s.lead_time_days} jours</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteSupplier(${s.id})">🗑</button></td>
+    </tr>
+  `).join('');
+}
+
+function openAddSupplier() { openModal('supplierModal'); }
+
+async function saveSupplier() {
+  const name = document.getElementById('supName').value.trim();
+  const contact = document.getElementById('supContact').value.trim();
+  const lead = parseInt(document.getElementById('supLead').value) || 7;
+  if(!name) return alert('Nom requis');
+  
+  const data = await safeInsert('suppliers', {name, contact, lead_time_days: lead});
+  if(data) {
+    suppliers.push(data);
+    closeModal('supplierModal');
+    renderSuppliers();
+    refreshSupplierSelects();
+  }
+}
+
+async function deleteSupplier(id) {
+  if(!confirm('Supprimer ?')) return;
+  await sb.from('suppliers').delete().eq('id', id);
+  suppliers = suppliers.filter(s => s.id !== id);
+  renderSuppliers();
+  refreshSupplierSelects();
+}
+
+function refreshSupplierSelects() {
+  const opts = suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  const el = document.getElementById('newPieceSupplier');
+  if(el) el.innerHTML = '<option value="">— Aucun —</option>' + opts;
+}
+
+// ===== LIGNES & MACHINES (WITH QR) =====
 async function addLigne(){
   const name=document.getElementById('newLigneName').value.trim();
   if(!name) return;
@@ -1330,7 +1656,7 @@ async function addLigne(){
 }
 
 async function deleteLigne(id){
-  if(!confirm('Supprimer cette ligne ? Les machines associées seront aussi supprimées.')) return;
+  if(!confirm('Supprimer cette ligne ?')) return;
   await sb.from('machines').delete().eq('ligne_id',id);
   await sb.from('lignes').delete().eq('id',id);
   lignes=lignes.filter(l=>l.id!==id);
@@ -1348,19 +1674,51 @@ function renderLigneList(){
         <strong>${l.name}</strong>
         <button class="btn btn-danger btn-sm" onclick="deleteLigne(${l.id})">✕</button>
       </div>
-      ${macs.length?macs.map(m=>`<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:0.78rem;margin:2px;display:inline-block;">${m.name} <button onclick="deleteMachine(${m.id})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.7rem;">✕</button></span>`).join(''):'<span style="color:var(--text3);font-size:0.8rem;">Aucune machine</span>'}
+      ${macs.length?macs.map(m=>`<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:0.78rem;margin:2px;display:inline-flex;align-items:center;gap:6px;">
+        ${m.name} 
+        <button onclick="showMachineQR(${m.id}, '${m.name}')" style="background:var(--accent);color:#000;border:none;border-radius:4px;padding:2px 6px;font-size:0.7rem;font-weight:bold;cursor:pointer;">QR</button>
+        <button onclick="deleteMachine(${m.id})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.7rem;">✕</button>
+      </span>`).join(''):'<span style="color:var(--text3);font-size:0.8rem;">Aucune machine</span>'}
     </div>`;
   }).join('');
+}
+
+function showMachineQR(id, name) {
+  document.getElementById('qrModalTitle').textContent = `QR: ${name}`;
+  const url = `${window.location.origin}${window.location.pathname}#machine=${id}`;
+  const canvas = document.getElementById('qrCanvas');
+  new QRious({
+    element: canvas,
+    value: url,
+    size: 250,
+    foreground: '#0a0e1a',
+    background: '#ffffff'
+  });
+  openModal('qrModal');
+}
+
+function checkURLHash() {
+  if(window.location.hash.startsWith('#machine=')) {
+    const mId = parseInt(window.location.hash.split('=')[1]);
+    const m = machines.find(x => x.id === mId);
+    if(m) {
+      showPage('historique');
+      document.getElementById('filterMachine').value = m.name;
+      renderHistorique();
+    }
+  }
 }
 
 async function addMachine(){
   const name=document.getElementById('newMachineName').value.trim();
   const ligneId=parseInt(document.getElementById('newMachineLigne').value);
   if(!name||!ligneId){alert('Renseignez le nom et la ligne.');return;}
-  machines.push({id:Date.now(),name,ligne_id:ligneId});
-  saveMachines();
-  document.getElementById('newMachineName').value='';
-  renderLigneList();
+  const data = await safeInsert('machines', {name, ligne_id: ligneId});
+  if(data) {
+    machines.push(data);
+    document.getElementById('newMachineName').value='';
+    renderLigneList();
+  }
 }
 
 async function deleteMachine(id){
@@ -1393,6 +1751,186 @@ function renderAdmin(){
   renderCatList();
   refreshLigneSelects();
   renderLigneList();
+  refreshSupplierSelects();
+}
+
+// ===== WORK ORDERS =====
+function renderWorkOrders() {
+  const tbody = document.getElementById('woTableBody');
+  if(!workOrders.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun ordre de travail.</td></tr>'; return; }
+  
+  tbody.innerHTML = workOrders.map(wo => {
+    const statusClass = wo.status === 'done' ? 'badge-ok' : (wo.status === 'in_progress' ? 'badge-warn' : 'badge-info');
+    const statusLabel = wo.status === 'done' ? 'Terminé' : (wo.status === 'in_progress' ? 'En cours' : 'Assigné');
+    
+    let actions = '';
+    if(checkPerm('update_wo')) {
+      if(wo.status === 'assigned') actions = `<button class="btn btn-primary btn-sm" onclick="updateWOStatus(${wo.id}, 'in_progress')">▶ Démarrer</button>`;
+      else if(wo.status === 'in_progress') actions = `<button class="btn btn-orange btn-sm" onclick="updateWOStatus(${wo.id}, 'done')">✓ Terminer</button>`;
+      else actions = '<span style="color:var(--accent3);">✓ Fait</span>';
+    }
+    
+    return `<tr>
+      <td><strong>${wo.machine_name}</strong></td>
+      <td>${wo.description}</td>
+      <td>${wo.assigned_to}</td>
+      <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddWO() {
+  const mSelect = document.getElementById('woMachine');
+  mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  
+  const aSelect = document.getElementById('woAssigned');
+  aSelect.innerHTML = employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+  
+  openModal('woModal');
+}
+
+async function saveWO() {
+  const machine = document.getElementById('woMachine').value;
+  const desc = document.getElementById('woDesc').value;
+  const assigned = document.getElementById('woAssigned').value;
+  if(!desc) return alert('Description requise');
+  
+  const data = await safeInsert('work_orders', {
+    machine_name: machine, description: desc, assigned_to: assigned, status: 'assigned'
+  });
+  if(data) {
+    workOrders.unshift(data);
+    closeModal('woModal');
+    renderWorkOrders();
+  }
+}
+
+async function updateWOStatus(id, status) {
+  const wo = workOrders.find(w => w.id === id);
+  if(!wo) return;
+  wo.status = status;
+  await sb.from('work_orders').update({status}).eq('id', id);
+  renderWorkOrders();
+}
+
+// ===== PLANNED MAINTENANCE =====
+function renderPlanned() {
+  const tbody = document.getElementById('plannedTableBody');
+  if(!plannedMaint.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucune maintenance planifiée.</td></tr>'; return; }
+  
+  tbody.innerHTML = plannedMaint.map(pm => {
+    const isDue = pm.next_due && new Date(pm.next_due) <= new Date();
+    return `<tr>
+      <td><strong>${pm.machine_name}</strong></td>
+      <td>${pm.description}</td>
+      <td>Tous les ${pm.interval_days} jours</td>
+      <td><span class="badge ${isDue ? 'badge-danger' : 'badge-ok'}">${pm.next_due ? new Date(pm.next_due).toLocaleDateString() : 'N/A'}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deletePlanned(${pm.id})">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddPlanned() {
+  const mSelect = document.getElementById('pmMachine');
+  mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  openModal('plannedModal');
+}
+
+async function savePlanned() {
+  const machine = document.getElementById('pmMachine').value;
+  const desc = document.getElementById('pmDesc').value;
+  const interval = parseInt(document.getElementById('pmInterval').value);
+  if(!desc) return alert('Tâche requise');
+  
+  const next = new Date();
+  next.setDate(next.getDate() + interval);
+  
+  const data = await safeInsert('planned_maintenance', {
+    machine_name: machine, description: desc, interval_days: interval, next_due: next.toISOString()
+  });
+  if(data) {
+    plannedMaint.push(data);
+    closeModal('plannedModal');
+    renderPlanned();
+  }
+}
+
+async function deletePlanned(id) {
+  if(!confirm('Supprimer ?')) return;
+  await sb.from('planned_maintenance').delete().eq('id', id);
+  plannedMaint = plannedMaint.filter(p => p.id !== id);
+  renderPlanned();
+}
+
+// ===== ANALYTICS =====
+function renderAnalytics() {
+  // Destroy old charts to prevent canvas reuse errors
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+  
+  Chart.defaults.color = '#8899b4';
+  Chart.defaults.borderColor = '#1e2d4d';
+
+  // 1. Stats calculations
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekInts = interventions.filter(i => new Date(i.date) >= weekAgo).length;
+  const totalDowntime = interventions.reduce((s, i) => s + (parseInt(i.downtime_minutes) || 0), 0);
+  
+  document.getElementById('statWeek').textContent = weekInts;
+  document.getElementById('statDowntime').textContent = Math.round(totalDowntime / 60) + 'h';
+  document.getElementById('statMTBF').textContent = (machines.length > 0 && interventions.length > 0) ? Math.round((interventions.length / machines.length) * 10) + 'h' : '--';
+
+  // 2. Chart Data Prep
+  const machineCounts = {};
+  const machineDowntime = {};
+  const partCounts = {};
+  
+  interventions.forEach(i => {
+    machineCounts[i.machine] = (machineCounts[i.machine] || 0) + 1;
+    machineDowntime[i.machine] = (machineDowntime[i.machine] || 0) + (parseInt(i.downtime_minutes) || 0);
+    (i.piecesUsed || i.pieces_used || []).forEach(p => {
+      partCounts[p.name] = (partCounts[p.name] || 0) + p.qty;
+    });
+  });
+
+  // 3. Draw Charts
+  charts.machines = new Chart(document.getElementById('chartMachines'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(machineCounts),
+      datasets: [{ label: 'Interventions', data: Object.values(machineCounts), backgroundColor: '#00c8ff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  charts.downtime = new Chart(document.getElementById('chartDowntime'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(machineDowntime),
+      datasets: [{ label: 'Minutes d\'arrêt', data: Object.values(machineDowntime), backgroundColor: '#ff3b5c' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  charts.parts = new Chart(document.getElementById('chartParts'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(partCounts).slice(0, 5),
+      datasets: [{ data: Object.values(partCounts).slice(0, 5), backgroundColor: ['#00c8ff', '#ff6b00', '#00ff9d', '#ffb800', '#ff3b5c'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+  
+  // Mock weekly trend
+  charts.week = new Chart(document.getElementById('chartWeek'), {
+    type: 'line',
+    data: {
+      labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      datasets: [{ label: 'Interventions', data: [2, 4, 3, 5, 2, 1, 0], borderColor: '#00ff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(0,255,157,0.1)' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
 }
 
 // ===== ADD INTERVENTION =====
@@ -1400,24 +1938,22 @@ let selectedPiecesMap={};
 let selectedPersonnel=[];
 
 function openAddIntervention(){
-  if(!isAdmin){openLogin();return;}
-  // reset
+  if(!checkPerm('add_intervention')){openLogin();return;}
   selectedPiecesMap={};
   selectedPersonnel=[];
   const now=new Date();
   document.getElementById('intDate').value=now.toISOString().slice(0,10);
   document.getElementById('intTime').value=now.toTimeString().slice(0,5);
   document.getElementById('intDuration').value='';
+  document.getElementById('intDowntime').value='';
   document.getElementById('intDesc').value='';
+  document.getElementById('intPhoto').value='';
 
-  // personnel chips
   const pm=document.getElementById('personnelMulti');
   pm.innerHTML=employees.map(e=>`<div class="pers-chip" data-name="${e.name}" onclick="togglePersonnel(this,'${e.name}')">${e.name}</div>`).join('');
 
-  // lignes
   refreshLigneSelects();
 
-  // piece selector
   const psl=document.getElementById('pieceSelectorList');
   psl.innerHTML=pieces.filter(p=>p.qty>0).map(p=>`
     <div class="piece-sel-item" data-id="${p.id}" onclick="togglePiece(${p.id},'${p.name.replace(/'/g,"\\'")}',${p.qty})">
@@ -1472,10 +2008,32 @@ function updatePieceQty(id,val,max){
   if(selectedPiecesMap[id]) selectedPiecesMap[id].qty=q;
 }
 
+function compressImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1024;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      }
+      img.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  });
+}
+
 async function saveIntervention(){
   const date=document.getElementById('intDate').value;
   const time=document.getElementById('intTime').value;
   const duration=parseInt(document.getElementById('intDuration').value)||0;
+  const downtime=parseInt(document.getElementById('intDowntime').value)||0;
   const description=document.getElementById('intDesc').value.trim();
   const ligne=document.getElementById('intLigne').value;
   const machine=document.getElementById('intMachine').value;
@@ -1483,7 +2041,14 @@ async function saveIntervention(){
   if(!date||!time){alert('Renseignez la date et l\'heure.');return;}
   if(!selectedPersonnel.length){alert('Sélectionnez au moins un technicien.');return;}
 
-  // deduct pieces
+  let photoUrl = '';
+  const photoInput = document.getElementById('intPhoto');
+  if(photoInput.files && photoInput.files[0]) {
+    showLoader('Compression photo...');
+    photoUrl = await compressImage(photoInput.files[0]);
+    hideLoader();
+  }
+
   const piecesUsed=[];
   for(const [id,{name,qty}] of Object.entries(selectedPiecesMap)){
     const piece=pieces.find(p=>p.id===parseInt(id));
@@ -1493,7 +2058,7 @@ async function saveIntervention(){
       piecesUsed.push({name,qty});
     }
   }
-  // Update pieces quantities in Supabase
+  
   for(const p of pieces){
     await sb.from('pieces').update({qty:p.qty}).eq('id',p.id);
   }
@@ -1501,17 +2066,23 @@ async function saveIntervention(){
 
   const newInt={
     id:'int_'+Date.now(),
-    date,time:time,duration,description,
-    ligne,machine,
+    date, time, duration, downtime_minutes: downtime, description,
+    ligne, machine,
     personnel:selectedPersonnel,
-    pieces_used:piecesUsed
+    pieces_used:piecesUsed,
+    photo_url: photoUrl
   };
-  const{data,error}=await sb.from('interventions').insert([newInt]).select().single();
-  if(error){alert('Erreur enregistrement: '+error.message);return;}
-  interventions.unshift(data||newInt);
-  closeModal('interventionModal');
-  showPage('historique');
-  renderHistorique();
+  
+  showLoader('Enregistrement...');
+  const data = await safeInsert('interventions', newInt);
+  hideLoader();
+  
+  if(data) {
+    interventions.unshift(data);
+    closeModal('interventionModal');
+    showPage('historique');
+    renderHistorique();
+  }
 }
 
 // ===== INIT =====

@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMAO — Atelier de Maintenance</title>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<!-- NEW: Libraries for Charts, PDF, and QR Codes -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -13,258 +12,74 @@
 
 <style>
 :root {
-  --bg: #0a0e1a;
-  --bg2: #0f1628;
-  --bg3: #141c35;
-  --panel: #111827;
-  --border: #1e2d4d;
-  --accent: #00c8ff;
-  --accent2: #ff6b00;
-  --accent3: #00ff9d;
-  --danger: #ff3b5c;
-  --warn: #ffb800;
-  --text: #e2e8f0;
-  --text2: #8899b4;
-  --text3: #4a5a7a;
-  --glow: 0 0 20px rgba(0,200,255,0.3);
-  --glow2: 0 0 20px rgba(255,107,0,0.3);
+  --bg: #0a0e1a; --bg2: #0f1628; --bg3: #141c35; --panel: #111827;
+  --border: #1e2d4d; --accent: #00c8ff; --accent2: #ff6b00; --accent3: #00ff9d;
+  --danger: #ff3b5c; --warn: #ffb800; --text: #e2e8f0; --text2: #8899b4; --text3: #4a5a7a;
+  --glow: 0 0 20px rgba(0,200,255,0.3); --glow2: 0 0 20px rgba(255,107,0,0.3);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{
-  font-family:'Exo 2',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  overflow-x:hidden;
-}
-body::before{
-  content:'';
-  position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(0,200,255,0.03) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,200,255,0.03) 1px,transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none;z-index:0;
-}
+body{font-family:'Exo 2',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
 
-/* ===== HEADER ===== */
-header{
-  position:sticky;top:0;z-index:100;
-  background:rgba(10,14,26,0.95);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);
-  padding:0 24px;
-  display:flex;align-items:center;justify-content:space-between;
-  height:64px;
-}
-.logo{
-  display:flex;align-items:center;gap:12px;
-  font-size:1.3rem;font-weight:900;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--accent);
-  text-shadow:var(--glow);
-}
+header{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{display:flex;align-items:center;gap:12px;font-size:1.3rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-shadow:var(--glow);}
 .logo span{color:var(--accent2);text-shadow:var(--glow2);}
-.logo-icon{
-  width:38px;height:38px;
-  border:2px solid var(--accent);
-  border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.1rem;
-  box-shadow:var(--glow);
-}
+.logo-icon{width:38px;height:38px;border:2px solid var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:var(--glow);}
 .header-right{display:flex;align-items:center;gap:16px;}
-.alert-btn{
-  position:relative;
-  background:rgba(255,184,0,0.1);
-  border:1px solid var(--warn);
-  color:var(--warn);
-  padding:7px 16px;border-radius:6px;
-  cursor:pointer;font-family:'Exo 2',sans-serif;
-  font-size:0.82rem;font-weight:600;
-  letter-spacing:1px;
-  transition:all 0.2s;
-}
+.alert-btn{position:relative;background:rgba(255,184,0,0.1);border:1px solid var(--warn);color:var(--warn);padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:1px;transition:all 0.2s;}
 .alert-btn:hover{background:rgba(255,184,0,0.2);box-shadow:0 0 12px rgba(255,184,0,0.3);}
-.alert-badge{
-  position:absolute;top:-6px;right:-6px;
-  background:var(--danger);color:#fff;
-  width:18px;height:18px;border-radius:50%;
-  font-size:0.65rem;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-}
-.login-btn{
-  background:linear-gradient(135deg,var(--accent),#0080aa);
-  color:#fff;border:none;
-  padding:8px 20px;border-radius:6px;
-  cursor:pointer;font-family:'Exo 2',sans-serif;
-  font-size:0.82rem;font-weight:700;
-  letter-spacing:1px;
-  transition:all 0.2s;
-  box-shadow:var(--glow);
-}
+.alert-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;width:18px;height:18px;border-radius:50%;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.login-btn{background:linear-gradient(135deg,var(--accent),#0080aa);color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:1px;transition:all 0.2s;box-shadow:var(--glow);}
 .login-btn:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(0,200,255,0.5);}
-.admin-badge{
-  display:flex;align-items:center;gap:8px;
-  background:rgba(0,255,157,0.1);
-  border:1px solid var(--accent3);
-  color:var(--accent3);
-  padding:7px 14px;border-radius:6px;
-  font-size:0.8rem;font-weight:700;letter-spacing:1px;
-}
+.admin-badge{display:flex;align-items:center;gap:8px;background:rgba(0,255,157,0.1);border:1px solid var(--accent3);color:var(--accent3);padding:7px 14px;border-radius:6px;font-size:0.8rem;font-weight:700;letter-spacing:1px;}
 
-/* ===== NAV ===== */
-nav{
-  display:flex;gap:0;
-  background:var(--bg2);
-  border-bottom:1px solid var(--border);
-  padding:0 24px;
-  overflow-x:auto;
-  position:relative;z-index:1;
-  white-space:nowrap;
-}
-nav button{
-  background:none;border:none;
-  color:var(--text2);
-  padding:14px 20px;
-  cursor:pointer;
-  font-family:'Exo 2',sans-serif;
-  font-size:0.85rem;font-weight:600;
-  letter-spacing:1px;text-transform:uppercase;
-  border-bottom:2px solid transparent;
-  transition:all 0.2s;white-space:nowrap;
-}
+nav{display:flex;gap:0;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto;position:relative;z-index:1;white-space:nowrap;}
+nav button{background:none;border:none;color:var(--text2);padding:14px 20px;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
 nav button:hover{color:var(--accent);}
 nav button.active{color:var(--accent);border-bottom-color:var(--accent);}
 nav button.admin-only{color:var(--accent2);}
 nav button.admin-only:hover{color:var(--accent2);border-bottom-color:var(--accent2);}
 nav button.admin-only.active{color:var(--accent2);border-bottom-color:var(--accent2);}
 
-/* ===== MAIN ===== */
-main{
-  position:relative;z-index:1;
-  padding:24px;
-  max-width:1400px;margin:0 auto;
-}
+main{position:relative;z-index:1;padding:24px;max-width:1400px;margin:0 auto;}
 .page{display:none;}
 .page.active{display:block;}
 
-/* ===== CARDS ===== */
-.card{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:20px;
-  margin-bottom:20px;
-}
-.card-title{
-  font-size:0.75rem;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--accent);margin-bottom:16px;
-  display:flex;align-items:center;gap:8px;
-}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+.card-title{font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 .card-title::before{content:'';width:3px;height:16px;background:var(--accent);border-radius:2px;display:inline-block;}
 
-/* ===== STATS ===== */
-.stats-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:16px;margin-bottom:24px;
-}
-.stat-card{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:10px;padding:18px;
-  position:relative;overflow:hidden;
-  transition:transform 0.2s;
-}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;position:relative;overflow:hidden;transition:transform 0.2s;}
 .stat-card:hover{transform:translateY(-2px);}
-.stat-card::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(0,200,255,0.05),transparent);
-  pointer-events:none;
-}
+.stat-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,200,255,0.05),transparent);pointer-events:none;}
 .stat-label{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:8px;}
 .stat-value{font-size:2rem;font-weight:900;color:var(--accent);font-family:'Share Tech Mono',monospace;}
 .stat-sub{font-size:0.75rem;color:var(--text3);margin-top:4px;}
 
-/* ===== TABLE ===== */
 .table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);}
 table{width:100%;border-collapse:collapse;}
-th{
-  background:var(--bg3);
-  color:var(--text2);
-  font-size:0.7rem;letter-spacing:2px;
-  text-transform:uppercase;
-  padding:12px 14px;text-align:left;
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-}
-td{
-  padding:12px 14px;
-  border-bottom:1px solid rgba(30,45,77,0.5);
-  font-size:0.87rem;
-  vertical-align:middle;
-}
+th{background:var(--bg3);color:var(--text2);font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:12px 14px;border-bottom:1px solid rgba(30,45,77,0.5);font-size:0.87rem;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(0,200,255,0.03);}
-.badge{
-  display:inline-block;
-  padding:3px 10px;border-radius:20px;
-  font-size:0.72rem;font-weight:700;letter-spacing:1px;
-}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:1px;}
 .badge-ok{background:rgba(0,255,157,0.1);color:var(--accent3);border:1px solid rgba(0,255,157,0.3);}
 .badge-warn{background:rgba(255,184,0,0.1);color:var(--warn);border:1px solid rgba(255,184,0,0.3);}
 .badge-danger{background:rgba(255,59,92,0.1);color:var(--danger);border:1px solid rgba(255,59,92,0.3);}
 .badge-info{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);}
 
-/* ===== FORMS ===== */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
 .form-group{display:flex;flex-direction:column;gap:6px;}
 .form-group label{font-size:0.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);}
-.form-group input,
-.form-group select,
-.form-group textarea{
-  background:var(--bg3);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:8px;
-  font-family:'Exo 2',sans-serif;
-  font-size:0.9rem;
-  transition:border-color 0.2s,box-shadow 0.2s;
-  outline:none;
-}
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus{
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(0,200,255,0.1);
-}
+.form-group input,.form-group select,.form-group textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:0.9rem;transition:border-color 0.2s,box-shadow 0.2s;outline:none;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,200,255,0.1);}
 .form-group textarea{resize:vertical;min-height:80px;}
 .form-group select option{background:var(--bg3);}
-input[type="file"]::file-selector-button {
-  background: var(--bg2);
-  color: var(--accent);
-  border: 1px solid var(--border);
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-right: 10px;
-}
+input[type="file"]::file-selector-button{background:var(--bg2);color:var(--accent);border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;margin-right:10px;}
 
-.btn{
-  padding:10px 22px;border-radius:8px;
-  border:none;cursor:pointer;
-  font-family:'Exo 2',sans-serif;
-  font-size:0.85rem;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;
-  transition:all 0.2s;
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--accent),#007baa);
-  color:#fff;box-shadow:var(--glow);
-}
+.btn{padding:10px 22px;border-radius:8px;border:none;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#007baa);color:#fff;box-shadow:var(--glow);}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 25px rgba(0,200,255,0.5);}
 .btn-danger{background:linear-gradient(135deg,var(--danger),#aa0020);color:#fff;}
 .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
@@ -272,205 +87,58 @@ input[type="file"]::file-selector-button {
 .btn-orange{background:linear-gradient(135deg,var(--accent2),#aa4400);color:#fff;box-shadow:var(--glow2);}
 .btn-sm{padding:6px 14px;font-size:0.75rem;}
 
-/* ===== MODAL ===== */
-.modal-overlay{
-  position:fixed;inset:0;z-index:1000;
-  background:rgba(5,8,20,0.85);
-  backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;
-}
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(5,8,20,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:28px;
-  width:90%;max-width:540px;
-  box-shadow:0 0 60px rgba(0,200,255,0.15);
-  animation:slideIn 0.25s ease;
-  max-height:90vh;overflow-y:auto;
-}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:540px;box-shadow:0 0 60px rgba(0,200,255,0.15);animation:slideIn 0.25s ease;max-height:90vh;overflow-y:auto;}
 .modal-lg{max-width:820px;}
 @keyframes slideIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal-title{
-  font-size:1rem;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--accent);margin-bottom:20px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.modal-close{
-  background:none;border:none;color:var(--text3);
-  font-size:1.4rem;cursor:pointer;line-height:1;
-  transition:color 0.2s;
-}
+.modal-title{font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;color:var(--text3);font-size:1.4rem;cursor:pointer;line-height:1;transition:color 0.2s;}
 .modal-close:hover{color:var(--danger);}
 
-/* ===== HISTORIQUE ===== */
 .intervention-day{margin-bottom:28px;}
-.day-header{
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:12px;
-}
-.day-label{
-  font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;
-  color:var(--accent);
-  background:rgba(0,200,255,0.08);
-  border:1px solid rgba(0,200,255,0.2);
-  padding:5px 14px;border-radius:20px;
-}
+.day-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.day-label{font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);padding:5px 14px;border-radius:20px;}
 .day-line{flex:1;height:1px;background:var(--border);}
-.intervention-card{
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-left:3px solid var(--accent2);
-  border-radius:10px;
-  padding:16px;
-  margin-bottom:10px;
-  transition:border-color 0.2s;
-}
+.intervention-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:10px;padding:16px;margin-bottom:10px;transition:border-color 0.2s;}
 .intervention-card:hover{border-left-color:var(--accent);}
-.intervention-meta{
-  display:flex;flex-wrap:wrap;gap:10px;
-  margin-bottom:10px;
-}
-.meta-tag{
-  display:flex;align-items:center;gap:5px;
-  background:var(--bg3);
-  border:1px solid var(--border);
-  border-radius:6px;
-  padding:4px 10px;
-  font-size:0.78rem;color:var(--text2);
-}
+.intervention-meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+.meta-tag{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:0.78rem;color:var(--text2);}
 .meta-tag strong{color:var(--text);}
 .pieces-used{margin-top:8px;}
-.piece-chip{
-  display:inline-block;
-  background:rgba(255,107,0,0.1);
-  border:1px solid rgba(255,107,0,0.3);
-  color:var(--accent2);
-  border-radius:5px;padding:2px 9px;
-  font-size:0.75rem;margin:2px;
-}
-.personnel-chip{
-  display:inline-block;
-  background:rgba(0,200,255,0.08);
-  border:1px solid rgba(0,200,255,0.2);
-  color:var(--accent);
-  border-radius:5px;padding:2px 9px;
-  font-size:0.75rem;margin:2px;
-}
-.intervention-photo {
-  margin-top: 12px;
-  max-width: 200px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.intervention-photo:hover { transform: scale(1.05); }
+.piece-chip{display:inline-block;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);color:var(--accent2);border-radius:5px;padding:2px 9px;font-size:0.75rem;margin:2px;}
+.personnel-chip{display:inline-block;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);color:var(--accent);border-radius:5px;padding:2px 9px;font-size:0.75rem;margin:2px;}
+.intervention-photo{margin-top:12px;max-width:200px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:transform 0.2s;}
+.intervention-photo:hover{transform:scale(1.05);}
 
-/* ===== SEARCH BAR ===== */
-.search-bar{
-  display:flex;flex-wrap:wrap;gap:10px;
-  margin-bottom:20px;
-}
-.search-bar input,
-.search-bar select{
-  background:var(--bg3);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:9px 14px;
-  border-radius:8px;
-  font-family:'Exo 2',sans-serif;
-  font-size:0.85rem;
-  outline:none;
-  transition:border-color 0.2s;
-  flex:1;min-width:160px;
-}
-.search-bar input:focus,
-.search-bar select:focus{border-color:var(--accent);}
+.search-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+.search-bar input,.search-bar select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.2s;flex:1;min-width:160px;}
+.search-bar input:focus,.search-bar select:focus{border-color:var(--accent);}
 
-/* ===== STOCK PIECES ===== */
-.pieces-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-  gap:14px;
-}
-.piece-card{
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-radius:10px;padding:16px;
-  position:relative;overflow:hidden;
-  transition:transform 0.2s,border-color 0.2s;
-}
+.pieces-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+.piece-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;}
 .piece-card:hover{transform:translateY(-2px);}
 .piece-card.warn{border-color:rgba(255,184,0,0.4);}
 .piece-card.danger{border-color:rgba(255,59,92,0.4);}
 .piece-name{font-weight:700;font-size:0.95rem;margin-bottom:4px;}
 .piece-cat{font-size:0.72rem;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;}
-.piece-qty{
-  font-family:'Share Tech Mono',monospace;
-  font-size:1.6rem;font-weight:700;
-}
+.piece-qty{font-family:'Share Tech Mono',monospace;font-size:1.6rem;font-weight:700;}
 .piece-qty.ok{color:var(--accent3);}
 .piece-qty.warn{color:var(--warn);}
 .piece-qty.danger{color:var(--danger);}
 
-/* ===== EMPLOYEES ===== */
-.emp-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
-  gap:14px;
-}
-.emp-card{
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-radius:10px;padding:16px;
-  text-align:center;
-  transition:transform 0.2s;
-}
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;}
+.emp-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;transition:transform 0.2s;}
 .emp-card:hover{transform:translateY(-2px);}
-.emp-avatar{
-  width:56px;height:56px;
-  border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),#005f88);
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.3rem;font-weight:700;
-  margin:0 auto 10px;
-  box-shadow:var(--glow);
-}
+.emp-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#005f88);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;margin:0 auto 10px;box-shadow:var(--glow);}
 .emp-name{font-weight:700;font-size:0.95rem;}
 .emp-role{font-size:0.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
 
-/* ===== FOOTER ===== */
-footer{
-  position:relative;z-index:1;
-  border-top:1px solid var(--border);
-  margin-top:40px;
-  padding:28px 24px;
-  text-align:center;
-}
-.footer-brand{
-  font-size:1rem;font-weight:900;
-  letter-spacing:3px;text-transform:uppercase;
-  color:var(--accent);margin-bottom:6px;
-}
+footer{position:relative;z-index:1;border-top:1px solid var(--border);margin-top:40px;padding:28px 24px;text-align:center;}
+.footer-brand{font-size:1rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 .footer-sub{font-size:0.78rem;color:var(--text3);margin-bottom:16px;}
-.creator-card{
-  display:inline-flex;align-items:center;gap:16px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:14px 24px;
-  box-shadow:0 0 30px rgba(0,200,255,0.08);
-}
-.creator-avatar{
-  width:44px;height:44px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent2),#7a3000);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:1rem;
-  box-shadow:var(--glow2);
-}
+.creator-card{display:inline-flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 24px;box-shadow:0 0 30px rgba(0,200,255,0.08);}
+.creator-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),#7a3000);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;box-shadow:var(--glow2);}
 .creator-info{text-align:left;}
 .creator-name{font-weight:700;font-size:0.95rem;color:var(--accent2);}
 .creator-contacts{font-size:0.78rem;color:var(--text2);margin-top:3px;}
@@ -478,104 +146,47 @@ footer{
 .creator-contacts a:hover{text-decoration:underline;}
 .footer-copy{font-size:0.72rem;color:var(--text3);margin-top:16px;letter-spacing:1px;}
 
-/* ===== PIECE SELECT IN INTERVENTION ===== */
-.piece-selector{
-  background:var(--bg3);
-  border:1px solid var(--border);
-  border-radius:8px;padding:12px;
-  margin-top:6px;
-}
-.piece-selector-list{
-  display:flex;flex-wrap:wrap;gap:8px;
-  margin-bottom:10px;
-  max-height:140px;overflow-y:auto;
-}
-.piece-sel-item{
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-radius:6px;
-  padding:5px 12px;
-  font-size:0.8rem;cursor:pointer;
-  transition:all 0.15s;
-  display:flex;align-items:center;gap:6px;
-}
+.piece-selector{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:6px;}
+.piece-selector-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;max-height:140px;overflow-y:auto;}
+.piece-sel-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:0.8rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
 .piece-sel-item:hover{border-color:var(--accent2);color:var(--accent2);}
-.piece-sel-item.selected{
-  background:rgba(255,107,0,0.12);
-  border-color:var(--accent2);
-  color:var(--accent2);
-}
-.piece-qty-ctrl{display:flex;align-items:center;gap:6px;margin-top:4px;}
-.piece-qty-ctrl input{width:60px;text-align:center;}
+.piece-sel-item.selected{background:rgba(255,107,0,0.12);border-color:var(--accent2);color:var(--accent2);}
 
-/* personnel multi-select */
-.personnel-multi{
-  display:flex;flex-wrap:wrap;gap:8px;
-  padding:8px;
-  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
-  min-height:44px;
-}
-.pers-chip{
-  background:rgba(0,200,255,0.08);
-  border:1px solid rgba(0,200,255,0.2);
-  color:var(--accent);
-  border-radius:6px;padding:4px 12px;
-  font-size:0.8rem;cursor:pointer;transition:all 0.15s;
-}
-.pers-chip.selected{
-  background:rgba(0,200,255,0.2);
-  border-color:var(--accent);
-  font-weight:700;
-}
+.personnel-multi{display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;min-height:44px;}
+.pers-chip{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);color:var(--accent);border-radius:6px;padding:4px 12px;font-size:0.8rem;cursor:pointer;transition:all 0.15s;}
+.pers-chip.selected{background:rgba(0,200,255,0.2);border-color:var(--accent);font-weight:700;}
 
-/* spinner/empty */
-.empty{
-  text-align:center;padding:40px;
-  color:var(--text3);font-size:0.9rem;
-  letter-spacing:1px;
-}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:0.9rem;letter-spacing:1px;}
 
-/* scrollbar */
-::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:var(--bg2);}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+/* Chart Container Fix (Prevents infinite resizing) */
+.chart-container { position: relative; height: 300px; width: 100%; }
 
-/* ===== MOBILE OPTIMIZATION (Shop Floor Ready) ===== */
+/* Mobile Optimization for Shop Floor */
 @media(max-width:768px){
-  header{padding:0 12px; height: 56px;}
-  .logo{font-size:1rem; gap: 8px;}
-  .logo-icon{width:32px; height:32px; font-size:0.9rem;}
+  header{padding:0 12px;height:56px;}
+  .logo{font-size:1rem;gap:8px;}
+  .logo-icon{width:32px;height:32px;font-size:0.9rem;}
   main{padding:14px;}
-  nav{padding: 0 12px;}
+  nav{padding:0 12px;}
   nav button{padding:12px 14px;font-size:0.75rem;}
-  
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-card { padding: 14px; }
-  .stat-value { font-size: 1.5rem; }
-  
-  .modal { width: 95%; padding: 18px; margin: 10px; }
-  .form-grid { grid-template-columns: 1fr !important; }
-  
-  /* Larger touch targets for technicians wearing gloves */
-  input, select, textarea, button, .pers-chip, .piece-sel-item { 
-    font-size: 16px !important; 
-    min-height: 48px; 
-  }
-  .btn { width: 100%; margin-bottom: 8px; }
-  .modal-footer-btns { flex-direction: column; }
-  
-  table { font-size: 0.75rem; }
-  th, td { padding: 8px 6px; }
-  .header-right { gap: 8px; }
-  .alert-btn, .login-btn { padding: 6px 10px; font-size: 0.7rem; }
-  .admin-badge { font-size: 0.7rem; padding: 5px 8px;}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-card{padding:14px;}
+  .stat-value{font-size:1.5rem;}
+  .modal{width:95%;padding:18px;margin:10px;}
+  .form-grid{grid-template-columns:1fr !important;}
+  input,select,textarea,button,.pers-chip,.piece-sel-item{font-size:16px !important;min-height:48px;}
+  .btn{width:100%;margin-bottom:8px;}
+  .modal-footer-btns{flex-direction:column;}
+  table{font-size:0.75rem;}
+  th,td{padding:8px 6px;}
+  .header-right{gap:8px;}
+  .alert-btn,.login-btn{padding:6px 10px;font-size:0.7rem;}
+  .admin-badge{font-size:0.7rem;padding:5px 8px;}
 }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <div class="logo">
     <div class="logo-icon">⚙</div>
@@ -592,7 +203,6 @@ footer{
   </div>
 </header>
 
-<!-- NAV -->
 <nav id="mainNav">
   <button class="active" onclick="showPage('dashboard')">📊 Tableau de Bord</button>
   <button class="login-required" style="display:none" onclick="showPage('workorders')">📋 Ordres</button>
@@ -603,12 +213,10 @@ footer{
   <button class="login-required" style="display:none" onclick="showPage('planned')">🗓 Préventif</button>
   <button class="admin-only" id="navSuppliers" style="display:none" onclick="showPage('suppliers')">🛒 Fournisseurs</button>
   <button onclick="showPage('about')">ℹ À Propos</button>
-  <!-- Actions -->
   <button class="admin-only" id="navAddIntervention" style="display:none" onclick="openAddIntervention()">➕ Intervention</button>
   <button class="admin-only" id="navAdmin" style="display:none" onclick="showPage('admin')">⚙ Admin</button>
 </nav>
 
-<!-- MAIN -->
 <main>
 
 <!-- DASHBOARD -->
@@ -625,11 +233,11 @@ footer{
   </div>
 </div>
 
-<!-- WORK ORDERS (NEW) -->
+<!-- WORK ORDERS -->
 <div class="page" id="page-workorders">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div class="card-title" style="margin:0">📋 Ordres de Travail</div>
-    <button class="btn btn-primary" id="btnAddWO" onclick="openAddWO()">➕ Nouvel Ordre</button>
+    <button class="btn btn-primary" id="btnAddWO" style="display:none" onclick="openAddWO()">➕ Nouvel Ordre</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -655,19 +263,15 @@ footer{
 <div class="page" id="page-historique">
   <div class="search-bar">
     <input type="date" id="filterDate" placeholder="Date" oninput="renderHistorique()">
-    <select id="filterPers" onchange="renderHistorique()">
-      <option value="">— Tout le personnel —</option>
-    </select>
-    <select id="filterMachine" onchange="renderHistorique()">
-      <option value="">— Toutes machines —</option>
-    </select>
+    <select id="filterPers" onchange="renderHistorique()"><option value="">— Tout le personnel —</option></select>
+    <select id="filterMachine" onchange="renderHistorique()"><option value="">— Toutes machines —</option></select>
     <button class="btn btn-secondary btn-sm" onclick="clearFilters()">✕ Réinitialiser</button>
     <button class="btn btn-orange btn-sm" onclick="exportHistoriquePDF()">📄 Export PDF</button>
   </div>
   <div id="historiqueContainer"></div>
 </div>
 
-<!-- ANALYTICS (NEW) -->
+<!-- ANALYTICS -->
 <div class="page" id="page-analytics">
   <div class="card-title">📈 Analytiques & Tableaux de Bord</div>
   <div class="stats-grid">
@@ -676,10 +280,10 @@ footer{
     <div class="stat-card"><div class="stat-label">MTBF Moyen</div><div class="stat-value" id="statMTBF">--</div></div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
-    <div class="card"><div class="card-title">Interventions par Semaine</div><canvas id="chartWeek"></canvas></div>
-    <div class="card"><div class="card-title">Pièces les plus utilisées</div><canvas id="chartParts"></canvas></div>
-    <div class="card"><div class="card-title">Machines les plus sollicitées</div><canvas id="chartMachines"></canvas></div>
-    <div class="card"><div class="card-title">Temps d'arrêt par Machine</div><canvas id="chartDowntime"></canvas></div>
+    <div class="card"><div class="card-title">Interventions par Semaine</div><div class="chart-container"><canvas id="chartWeek"></canvas></div></div>
+    <div class="card"><div class="card-title">Pièces les plus utilisées</div><div class="chart-container"><canvas id="chartParts"></canvas></div></div>
+    <div class="card"><div class="card-title">Machines les plus sollicitées</div><div class="chart-container"><canvas id="chartMachines"></canvas></div></div>
+    <div class="card"><div class="card-title">Temps d'arrêt par Machine</div><div class="chart-container"><canvas id="chartDowntime"></canvas></div></div>
   </div>
 </div>
 
@@ -688,11 +292,11 @@ footer{
   <div class="emp-grid" id="empGrid"></div>
 </div>
 
-<!-- PLANNED MAINTENANCE (NEW) -->
+<!-- PLANNED MAINTENANCE -->
 <div class="page" id="page-planned">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div class="card-title" style="margin:0">🗓 Maintenance Préventive</div>
-<button class="btn btn-primary admin-only" id="btnAddPlanned" style="display:none" onclick="openAddPlanned()">➕ Planifier</button>
+    <button class="btn btn-primary admin-only" id="btnAddPlanned" style="display:none" onclick="openAddPlanned()">➕ Planifier</button>
   </div>
   <div class="table-wrap">
     <table>
@@ -702,7 +306,7 @@ footer{
   </div>
 </div>
 
-<!-- SUPPLIERS (NEW) -->
+<!-- SUPPLIERS -->
 <div class="page" id="page-suppliers">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div class="card-title" style="margin:0">🛒 Fournisseurs</div>
@@ -719,17 +323,12 @@ footer{
 <!-- ADMIN -->
 <div class="page" id="page-admin">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
-
     <div class="card">
       <div class="card-title">Ajouter une Pièce</div>
       <div class="form-grid" style="grid-template-columns:1fr;">
         <div class="form-group"><label>Nom de la pièce</label><input id="newPieceName" placeholder="Ex: Roulement 6205"></div>
-        <div class="form-group"><label>Catégorie</label>
-          <select id="newPieceCat"><option value="">— Choisir —</option></select>
-        </div>
-        <div class="form-group"><label>Fournisseur</label>
-          <select id="newPieceSupplier"><option value="">— Aucun —</option></select>
-        </div>
+        <div class="form-group"><label>Catégorie</label><select id="newPieceCat"><option value="">— Choisir —</option></select></div>
+        <div class="form-group"><label>Fournisseur</label><select id="newPieceSupplier"><option value="">— Aucun —</option></select></div>
         <div class="form-group"><label>Quantité initiale</label><input type="number" id="newPieceQty" value="1" min="0"></div>
         <div class="form-group"><label>Seuil d'alerte</label><input type="number" id="newPieceThresh" value="3" min="1"></div>
         <div class="form-group"><label>Référence</label><input id="newPieceRef" placeholder="REF-0000"></div>
@@ -739,18 +338,14 @@ footer{
         <button class="btn btn-secondary" onclick="openManagePieces()">Gérer le stock</button>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Ajouter un Employé</div>
       <div class="form-grid" style="grid-template-columns:1fr;">
         <div class="form-group"><label>Nom complet</label><input id="newEmpName" placeholder="Prénom Nom"></div>
         <div class="form-group"><label>Profession / Poste</label><input id="newEmpRole" placeholder="Technicien, Électricien..."></div>
       </div>
-      <div style="margin-top:14px;">
-        <button class="btn btn-primary" onclick="addEmployee()">Ajouter l'employé</button>
-      </div>
+      <div style="margin-top:14px;"><button class="btn btn-primary" onclick="addEmployee()">Ajouter l'employé</button></div>
     </div>
-
     <div class="card">
       <div class="card-title">Gérer les Catégories</div>
       <div class="form-grid" style="grid-template-columns:1fr;margin-bottom:10px;">
@@ -759,7 +354,6 @@ footer{
       <button class="btn btn-primary" onclick="addCategory()" style="margin-bottom:12px;">Créer la catégorie</button>
       <div id="catList"></div>
     </div>
-
     <div class="card">
       <div class="card-title">Lignes & Machines (QR Codes)</div>
       <div class="form-grid" style="grid-template-columns:1fr;margin-bottom:10px;">
@@ -769,13 +363,10 @@ footer{
       <div id="ligneList" style="margin-bottom:16px;"></div>
       <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px;">
         <div class="form-group"><label>Machine (nom)</label><input id="newMachineName" placeholder="Ex: Tour CNC, Convoyeur..."></div>
-        <div class="form-group"><label>Ligne</label>
-          <select id="newMachineLigne"><option value="">— Choisir —</option></select>
-        </div>
+        <div class="form-group"><label>Ligne</label><select id="newMachineLigne"><option value="">— Choisir —</option></select></div>
       </div>
       <button class="btn btn-primary" onclick="addMachine()">Ajouter la machine</button>
     </div>
-
   </div>
 </div>
 
@@ -803,7 +394,6 @@ footer{
 
 </main>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-brand">GMAO — Atelier de Maintenance</div>
   <div class="footer-sub">Système de Gestion de Maintenance Assistée par Ordinateur</div>
@@ -820,23 +410,18 @@ footer{
   <div class="footer-copy">© 2026 HAMMIA Islam — Tous droits réservés</div>
 </footer>
 
-<!-- ===== MODALS ===== -->
-
-<!-- LOGIN -->
+<!-- MODALS -->
 <div class="modal-overlay" id="loginModal">
   <div class="modal">
-    <div class="modal-title">
-      🔒 Connexion
-      <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-title">🔒 Connexion <button class="modal-close" onclick="closeModal('loginModal')">✕</button></div>
+    <div style="font-size:0.8rem; color:var(--text3); margin-bottom:16px; background:var(--bg3); padding:10px; border-radius:6px;">
+      <strong>Comptes de test :</strong><br>
+      👑 Admin: <code>islam</code> / <code>hammia</code><br>
+      🔧 Tech: <code>tech</code> / <code>tech</code><br>
+      👁 Lecture: <code>read</code> / <code>read</code>
     </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>Identifiant</label>
-      <input type="text" id="loginUser" placeholder="identifiant">
-    </div>
-    <div class="form-group" style="margin-bottom:20px;">
-      <label>Mot de passe</label>
-      <input type="password" id="loginPass" placeholder="••••••••">
-    </div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Identifiant</label><input type="text" id="loginUser" placeholder="identifiant"></div>
+    <div class="form-group" style="margin-bottom:20px;"><label>Mot de passe</label><input type="password" id="loginPass" placeholder="••••••••"></div>
     <div id="loginError" style="color:var(--danger);font-size:0.82rem;margin-bottom:12px;display:none;">Identifiant ou mot de passe incorrect.</div>
     <div class="modal-footer-btns" style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="doLogin()">Se connecter</button>
@@ -845,64 +430,29 @@ footer{
   </div>
 </div>
 
-<!-- ALERTS -->
 <div class="modal-overlay" id="alertsModal">
   <div class="modal modal-lg">
-    <div class="modal-title">
-      ⚠ Articles en Rupture / Alerte
-      <button class="modal-close" onclick="closeModal('alertsModal')">✕</button>
-    </div>
-    <button class="btn btn-orange" onclick="exportReorderPDF()" style="margin-bottom:16px; width:100%;">📄 Générer Demande d'Achat (PDF)</button>
+    <div class="modal-title">⚠ Articles en Rupture / Alerte <button class="modal-close" onclick="closeModal('alertsModal')">✕</button></div>
+    <button class="btn btn-orange admin-only" id="btnReorderPDF" style="display:none; margin-bottom:16px; width:100%;" onclick="exportReorderPDF()">📄 Générer Demande d'Achat (PDF)</button>
     <div id="alertsList"></div>
   </div>
 </div>
 
-<!-- STOCK DETAIL -->
-<div class="modal-overlay" id="stockModal">
-  <div class="modal modal-lg">
-    <div class="modal-title">
-      📦 Détail du Stock
-      <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
-    </div>
-    <div id="stockModalContent"></div>
-  </div>
-</div>
-
-<!-- ADD INTERVENTION -->
 <div class="modal-overlay" id="interventionModal">
   <div class="modal modal-lg">
-    <div class="modal-title">
-      ➕ Nouvelle Intervention
-      <button class="modal-close" onclick="closeModal('interventionModal')">✕</button>
-    </div>
+    <div class="modal-title">➕ Nouvelle Intervention <button class="modal-close" onclick="closeModal('interventionModal')">✕</button></div>
     <div class="form-grid">
       <div class="form-group"><label>Date</label><input type="date" id="intDate"></div>
       <div class="form-group"><label>Heure de début</label><input type="time" id="intTime"></div>
       <div class="form-group"><label>Durée (minutes)</label><input type="number" id="intDuration" min="1" placeholder="Ex: 90"></div>
       <div class="form-group"><label>Temps d'arrêt (minutes)</label><input type="number" id="intDowntime" min="0" placeholder="Ex: 45"></div>
-      <div class="form-group">
-        <label>Ligne</label>
-        <select id="intLigne" onchange="updateMachineSelect()"><option value="">— Choisir une ligne —</option></select>
-      </div>
-      <div class="form-group">
-        <label>Machine</label>
-        <select id="intMachine"><option value="">— Choisir une machine —</option></select>
-      </div>
+      <div class="form-group"><label>Ligne</label><select id="intLigne" onchange="updateMachineSelect()"><option value="">— Choisir une ligne —</option></select></div>
+      <div class="form-group"><label>Machine</label><select id="intMachine"><option value="">— Choisir une machine —</option></select></div>
     </div>
-    <div class="form-group" style="margin-top:14px;">
-      <label>Description de l'intervention</label>
-      <textarea id="intDesc" placeholder="Décrire l'intervention effectuée..."></textarea>
-    </div>
-    <div class="form-group" style="margin-top:14px;">
-      <label>📸 Photo (Panne/Réparation)</label>
-      <input type="file" id="intPhoto" accept="image/*" capture="environment">
-    </div>
-    <div class="form-group" style="margin-top:14px;">
-      <label>Personnel intervenant (sélection multiple)</label>
-      <div class="personnel-multi" id="personnelMulti"></div>
-    </div>
-    <div class="form-group" style="margin-top:14px;">
-      <label>Pièces utilisées</label>
+    <div class="form-group" style="margin-top:14px;"><label>Description de l'intervention</label><textarea id="intDesc" placeholder="Décrire l'intervention effectuée..."></textarea></div>
+    <div class="form-group" style="margin-top:14px;"><label>📸 Photo (Panne/Réparation)</label><input type="file" id="intPhoto" accept="image/*" capture="environment"></div>
+    <div class="form-group" style="margin-top:14px;"><label>Personnel intervenant (sélection multiple)</label><div class="personnel-multi" id="personnelMulti"></div></div>
+    <div class="form-group" style="margin-top:14px;"><label>Pièces utilisées</label>
       <div class="piece-selector">
         <div class="piece-selector-list" id="pieceSelectorList"></div>
         <div id="selectedPiecesQty"></div>
@@ -915,13 +465,9 @@ footer{
   </div>
 </div>
 
-<!-- MANAGE PIECES (stock update) -->
 <div class="modal-overlay" id="managePiecesModal">
   <div class="modal modal-lg">
-    <div class="modal-title">
-      📦 Gérer le Stock
-      <button class="modal-close" onclick="closeModal('managePiecesModal')">✕</button>
-    </div>
+    <div class="modal-title">📦 Gérer le Stock <button class="modal-close" onclick="closeModal('managePiecesModal')">✕</button></div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Pièce</th><th>Catégorie</th><th>Qté actuelle</th><th>Seuil</th><th>Ajuster</th><th>Supprimer</th></tr></thead>
@@ -931,37 +477,20 @@ footer{
   </div>
 </div>
 
-<!-- QR CODE MODAL -->
 <div class="modal-overlay" id="qrModal">
   <div class="modal" style="text-align:center;">
-    <div class="modal-title">
-      <span id="qrModalTitle">QR Code Machine</span>
-      <button class="modal-close" onclick="closeModal('qrModal')">✕</button>
-    </div>
+    <div class="modal-title"><span id="qrModalTitle">QR Code Machine</span><button class="modal-close" onclick="closeModal('qrModal')">✕</button></div>
     <canvas id="qrCanvas" style="background:#fff; padding:15px; border-radius:12px; margin: 10px auto; display:block;"></canvas>
     <p style="font-size:0.8rem; color:var(--text3); margin-top:10px;">Scannez pour voir l'historique de la machine sur mobile.</p>
   </div>
 </div>
 
-<!-- WORK ORDER MODAL -->
 <div class="modal-overlay" id="woModal">
   <div class="modal">
-    <div class="modal-title">
-      ➕ Nouvel Ordre de Travail
-      <button class="modal-close" onclick="closeModal('woModal')">✕</button>
-    </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>Machine</label>
-      <select id="woMachine"></select>
-    </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>Description de la tâche</label>
-      <textarea id="woDesc"></textarea>
-    </div>
-    <div class="form-group" style="margin-bottom:20px;">
-      <label>Assigner à</label>
-      <select id="woAssigned"></select>
-    </div>
+    <div class="modal-title">➕ Nouvel Ordre de Travail <button class="modal-close" onclick="closeModal('woModal')">✕</button></div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Machine</label><select id="woMachine"></select></div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Description de la tâche</label><textarea id="woDesc"></textarea></div>
+    <div class="form-group" style="margin-bottom:20px;"><label>Assigner à</label><select id="woAssigned"></select></div>
     <div class="modal-footer-btns" style="display:flex;gap:10px;">
       <button class="btn btn-primary" onclick="saveWO()">Créer l'ordre</button>
       <button class="btn btn-secondary" onclick="closeModal('woModal')">Annuler</button>
@@ -969,25 +498,12 @@ footer{
   </div>
 </div>
 
-<!-- PLANNED MAINTENANCE MODAL -->
 <div class="modal-overlay" id="plannedModal">
   <div class="modal">
-    <div class="modal-title">
-      🗓 Planifier Maintenance
-      <button class="modal-close" onclick="closeModal('plannedModal')">✕</button>
-    </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>Machine</label>
-      <select id="pmMachine"></select>
-    </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>Tâche à effectuer</label>
-      <input type="text" id="pmDesc" placeholder="Ex: Vidange huile, Graissage...">
-    </div>
-    <div class="form-group" style="margin-bottom:20px;">
-      <label>Intervalle (Jours)</label>
-      <input type="number" id="pmInterval" value="90" min="1">
-    </div>
+    <div class="modal-title">🗓 Planifier Maintenance <button class="modal-close" onclick="closeModal('plannedModal')">✕</button></div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Machine</label><select id="pmMachine"></select></div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Tâche à effectuer</label><input type="text" id="pmDesc" placeholder="Ex: Vidange huile, Graissage..."></div>
+    <div class="form-group" style="margin-bottom:20px;"><label>Intervalle (Jours)</label><input type="number" id="pmInterval" value="90" min="1"></div>
     <div class="modal-footer-btns" style="display:flex;gap:10px;">
       <button class="btn btn-primary" onclick="savePlanned()">Planifier</button>
       <button class="btn btn-secondary" onclick="closeModal('plannedModal')">Annuler</button>
@@ -995,13 +511,9 @@ footer{
   </div>
 </div>
 
-<!-- SUPPLIER MODAL -->
 <div class="modal-overlay" id="supplierModal">
   <div class="modal">
-    <div class="modal-title">
-      🛒 Ajouter Fournisseur
-      <button class="modal-close" onclick="closeModal('supplierModal')">✕</button>
-    </div>
+    <div class="modal-title">🛒 Ajouter Fournisseur <button class="modal-close" onclick="closeModal('supplierModal')">✕</button></div>
     <div class="form-group" style="margin-bottom:14px;"><label>Nom</label><input type="text" id="supName"></div>
     <div class="form-group" style="margin-bottom:14px;"><label>Contact</label><input type="text" id="supContact"></div>
     <div class="form-group" style="margin-bottom:20px;"><label>Délai (Jours)</label><input type="number" id="supLead" value="7"></div>
@@ -1012,35 +524,20 @@ footer{
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ===== SUPABASE CONFIG =====
 const SUPABASE_URL = 'https://cuctsokaivauyulgpvfg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_nX7iYihEuJgJcqeZaxE7-g_KIgW81wL';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ===== STATE =====
-let currentUser = null; // { name: '...', role: 'admin' | 'technician' | 'read_only' }
-let categories = [];
-let pieces = [];
-let employees = [];
-let interventions = [];
-let lignes = [];
-let machines = [];
-let suppliers = [];
-let workOrders = [];
-let plannedMaint = [];
-
-// Chart instances
+let currentUser = null;
+let categories = [], pieces = [], employees = [], interventions = [], lignes = [], machines = [], suppliers = [], workOrders = [], plannedMaint = [];
 let charts = {};
 
-// ===== LOADING OVERLAY =====
 function showLoader(msg){
   let el=document.getElementById('globalLoader');
   if(!el){
-    el=document.createElement('div');
-    el.id='globalLoader';
+    el=document.createElement('div'); el.id='globalLoader';
     el.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,14,26,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(6px);';
     el.innerHTML='<div style="width:46px;height:46px;border:3px solid #1e2d4d;border-top-color:#00c8ff;border-radius:50%;animation:ldspin 0.8s linear infinite;"></div><div style="color:#00c8ff;font-size:0.82rem;letter-spacing:2px;text-transform:uppercase;" id="loaderMsg"></div>';
     const s=document.createElement('style');s.textContent='@keyframes ldspin{to{transform:rotate(360deg)}}';document.head.appendChild(s);
@@ -1051,11 +548,10 @@ function showLoader(msg){
 }
 function hideLoader(){const el=document.getElementById('globalLoader');if(el)el.style.display='none';}
 
-// ===== SAFE FETCH (Prevents app crash if new tables aren't created yet) =====
 async function safeFetch(table, orderCol = 'id', asc = true) {
   try {
     const { data, error } = await sb.from(table).select('*').order(orderCol, { ascending: asc });
-    if (error) { console.warn(`Table ${table} missing or error:`, error.message); return []; }
+    if (error) { console.warn(`Table ${table} missing:`, error.message); return []; }
     return data || [];
   } catch (e) { return []; }
 }
@@ -1063,16 +559,11 @@ async function safeFetch(table, orderCol = 'id', asc = true) {
 async function safeInsert(table, payload) {
   try {
     const { data, error } = await sb.from(table).insert([payload]).select().single();
-    if (error) { 
-      console.warn(error); 
-      alert("Erreur base de données: " + error.message + "\n(Avez-vous créé la table '" + table + "' dans Supabase ?)"); 
-      return null; 
-    }
+    if (error) { alert("Erreur base de données: " + error.message + "\n(Avez-vous créé la table '" + table + "' dans Supabase ?)"); return null; }
     return data;
   } catch(e) { return null; }
 }
 
-// ===== LOAD ALL DATA =====
 async function loadAllData(){
   showLoader('Connexion à la base de données...');
   try{
@@ -1084,146 +575,112 @@ async function loadAllData(){
       sb.from('lignes').select('*').order('id').then(r => r.data || []).catch(() => []),
       sb.from('machines').select('*').order('id').then(r => r.data || []).catch(() => []),
     ]);
-    
     categories = cR.map(r => r.name);
-    pieces = pR;
-    employees = eR;
-    interventions = iR;
-    lignes = lR;
-    machines = mR;
-
-    // Fetch new tables safely
+    pieces = pR; employees = eR; interventions = iR; lignes = lR; machines = mR;
     suppliers = await safeFetch('suppliers');
     workOrders = await safeFetch('work_orders', 'created_at', false);
     plannedMaint = await safeFetch('planned_maintenance');
-
     await seedIfEmpty();
   }catch(err){
-    console.error(err);
-    hideLoader();
+    console.error(err); hideLoader();
     alert('Impossible de se connecter à Supabase.\nVérifiez SUPABASE_URL et SUPABASE_ANON_KEY dans le code.');
     return;
   }
   hideLoader();
   updateAlertBadge();
   renderDashboard();
-  checkURLHash(); // Check for QR code scan
+  checkURLHash();
 }
 
 async function seedIfEmpty(){
   if(pieces.length===0){
-    const seed=[
-      {name:'Roulement 6205',cat:'Mécanique',qty:12,thresh:3,ref:'RLT-6205'},
-      {name:'Courroie B50',cat:'Mécanique',qty:5,thresh:4,ref:'CRR-B50'},
-      {name:'Disjoncteur 10A',cat:'Électrique',qty:2,thresh:3,ref:'DIS-10A'},
-    ];
-    const{data}=await sb.from('pieces').insert(seed).select();
-    pieces=data||seed;
+    const seed=[{name:'Roulement 6205',cat:'Mécanique',qty:12,thresh:3,ref:'RLT-6205'},{name:'Courroie B50',cat:'Mécanique',qty:5,thresh:4,ref:'CRR-B50'},{name:'Disjoncteur 10A',cat:'Électrique',qty:2,thresh:3,ref:'DIS-10A'}];
+    const{data}=await sb.from('pieces').insert(seed).select(); pieces=data||seed;
   }
   if(employees.length===0){
-    const seed=[
-      {name:'HAMMIA Islam',role:'Responsable Maintenance'},
-      {name:'BENALI Karim',role:'Technicien Électrique'},
-    ];
-    const{data}=await sb.from('employees').insert(seed).select();
-    employees=data||seed;
+    const seed=[{name:'HAMMIA Islam',role:'Responsable Maintenance'},{name:'BENALI Karim',role:'Technicien Électrique'}];
+    const{data}=await sb.from('employees').insert(seed).select(); employees=data||seed;
   }
   if(categories.length===0){
     const names=['Mécanique','Électrique','Pneumatique','Hydraulique','Consommable'];
-    const rows=names.map(name=>({name}));
-    await sb.from('categories').insert(rows);
-    categories=names;
+    await sb.from('categories').insert(names.map(name=>({name}))); categories=names;
   }
   if(lignes.length===0){
     const seedL=[{name:'Ligne A'},{name:'Ligne B'}];
-    const{data:ld}=await sb.from('lignes').insert(seedL).select();
-    lignes=ld||seedL;
-    const seedM=[
-      {name:'Tour CNC',ligne_id:lignes[0].id},
-      {name:'Presse Hydraulique',ligne_id:lignes[1].id},
-    ];
-    const{data:md}=await sb.from('machines').insert(seedM).select();
-    machines=md||seedM;
+    const{data:ld}=await sb.from('lignes').insert(seedL).select(); lignes=ld||seedL;
+    const seedM=[{name:'Tour CNC',ligne_id:lignes[0].id},{name:'Presse Hydraulique',ligne_id:lignes[1].id}];
+    const{data:md}=await sb.from('machines').insert(seedM).select(); machines=md||seedM;
   }
 }
 
-// ===== AUTH & ROLES =====
 function openLogin(){
   document.getElementById('loginUser').value='';
   document.getElementById('loginPass').value='';
   document.getElementById('loginError').style.display='none';
   openModal('loginModal');
 }
+
 function doLogin(){
   const u=document.getElementById('loginUser').value.trim();
   const p=document.getElementById('loginPass').value.trim();
-  
-  if(u==='islam' && p==='hammia'){
-    currentUser = { name: 'HAMMIA Islam', role: 'admin' };
-  } else if(u==='tech' && p==='tech'){
-    currentUser = { name: 'Technicien', role: 'technician' };
-  } else {
-    document.getElementById('loginError').style.display='block';
-    return;
-  }
-  
+  if(u==='islam' && p==='hammia') currentUser = { name: 'HAMMIA Islam', role: 'admin' };
+  else if(u==='tech' && p==='tech') currentUser = { name: 'Technicien', role: 'technician' };
+  else if(u==='read' && p==='read') currentUser = { name: 'Management', role: 'read_only' };
+  else { document.getElementById('loginError').style.display='block'; return; }
   closeModal('loginModal');
   updateAuthUI();
   showPage('dashboard');
 }
-function doLogout(){
+
+function doLogout() {
   currentUser = null;
-  updateAuthUI();
+  updateAuthUI(); // Forces complete UI reset
   showPage('dashboard');
 }
 
 function updateAuthUI() {
   const authArea = document.getElementById('authArea');
-  if (currentUser) {
-    const roleBadge = currentUser.role === 'admin' ? '👑 Admin' : (currentUser.role === 'technician' ? '🔧 Tech' : '👁 Lecture');
+  const isLogged = !!currentUser;
+  const isAdmin = currentUser?.role === 'admin';
+  const isTech = currentUser?.role === 'technician';
+
+  if (isLogged) {
+    const roleBadge = isAdmin ? '👑 Admin' : (isTech ? '🔧 Tech' : '👁 Lecture');
     authArea.innerHTML = `<div class="admin-badge">${roleBadge} <button onclick="doLogout()" style="background:none;border:none;color:var(--danger);cursor:pointer;margin-left:8px;font-size:0.8rem;">✕</button></div>`;
   } else {
     authArea.innerHTML = `<button class="login-btn" onclick="openLogin()">🔒 Connexion</button>`;
   }
   
-  const isAdmin = currentUser?.role === 'admin';
-  const isTech = currentUser?.role === 'technician';
-  
-  document.getElementById('navAdmin').style.display = isAdmin ? '' : 'none';
-  document.getElementById('navAddIntervention').style.display = isAdmin ? '' : 'none';
-  document.getElementById('btnAddWO').style.display = (isAdmin || isTech) ? '' : 'none';
-  document.getElementById('btnAddPlanned').style.display = isAdmin ? '' : 'none';
-  document.getElementById('navSuppliers').style.display = isAdmin ? '' : 'none';
-  document.querySelectorAll('.login-required').forEach(el => {
-    el.style.display = currentUser ? '' : 'none';
-  });
-  
-  // Hide edit/delete buttons if read-only
-  document.querySelectorAll('.admin-action').forEach(el => {
+  const toggle = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; };
+
+  // STRICTLY ADMIN ONLY
+  toggle('navAdmin', isAdmin);
+  toggle('navSuppliers', isAdmin);
+  toggle('btnAddWO', isAdmin);
+  toggle('btnAddPlanned', isAdmin);
+  toggle('btnReorderPDF', isAdmin);
+
+  // SWEEP: Force hide EVERY element with the 'admin-only' class if not admin
+  document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
+
+  // ADMIN + TECHNICIAN
+  toggle('navAddIntervention', isAdmin || isTech);
+
+  // ANY LOGGED IN USER
+  document.querySelectorAll('.login-required').forEach(el => {
+    el.style.display = isLogged ? '' : 'none';
+  });
 }
 
-function checkPerm(action) {
-  if (!currentUser) return false;
-  if (currentUser.role === 'admin') return true;
-  if (currentUser.role === 'technician') {
-    return ['add_intervention', 'view_wo'].includes(action);
-  }
-  return false; 
-}
-
-// ===== NAVIGATION =====
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  
-  const navButtons = document.querySelectorAll('nav button');
-  navButtons.forEach(b => {
+  document.querySelectorAll('nav button').forEach(b => {
     if(b.getAttribute('onclick') === `showPage('${id}')`) b.classList.add('active');
   });
-
   if(id==='dashboard') renderDashboard();
   if(id==='stock') renderStock();
   if(id==='historique') renderHistorique();
@@ -1235,33 +692,24 @@ function showPage(id){
   if(id==='suppliers') renderSuppliers();
 }
 
-// ===== MODAL HELPERS =====
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// ===== ALERT BADGE & REORDER PDF =====
 function updateAlertBadge(){
   const low=pieces.filter(p=>p.qty<=p.thresh);
   document.getElementById('alertBadge').textContent=low.length;
 }
+
 function openAlerts(){
   updateAlertBadge();
   const low=pieces.filter(p=>p.qty<=p.thresh);
   let html='';
   if(!low.length){html='<div class="empty">✅ Aucun article en rupture de stock.</div>';}
   else{
-    html=`<div class="table-wrap"><table>
-      <thead><tr><th>Pièce</th><th>Catégorie</th><th>Réf.</th><th>Qté</th><th>Seuil</th><th>Statut</th></tr></thead><tbody>`;
+    html=`<div class="table-wrap"><table><thead><tr><th>Pièce</th><th>Catégorie</th><th>Réf.</th><th>Qté</th><th>Seuil</th><th>Statut</th></tr></thead><tbody>`;
     low.forEach(p=>{
       const danger=p.qty===0;
-      html+=`<tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.cat}</td>
-        <td><span style="font-family:'Share Tech Mono',monospace;color:var(--text3)">${p.ref}</span></td>
-        <td><span class="piece-qty ${danger?'danger':'warn'}" style="font-size:1rem">${p.qty}</span></td>
-        <td>${p.thresh}</td>
-        <td><span class="badge ${danger?'badge-danger':'badge-warn'}">${danger?'RUPTURE':'ALERTE'}</span></td>
-      </tr>`;
+      html+=`<tr><td><strong>${p.name}</strong></td><td>${p.cat}</td><td><span style="font-family:'Share Tech Mono',monospace;color:var(--text3)">${p.ref}</span></td><td><span class="piece-qty ${danger?'danger':'warn'}" style="font-size:1rem">${p.qty}</span></td><td>${p.thresh}</td><td><span class="badge ${danger?'badge-danger':'badge-warn'}">${danger?'RUPTURE':'ALERTE'}</span></td></tr>`;
     });
     html+='</tbody></table></div>';
   }
@@ -1273,37 +721,23 @@ function exportReorderPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const low = pieces.filter(p => p.qty <= p.thresh);
-  
-  doc.setFontSize(18);
-  doc.text("Demande d'Achat / Réapprovisionnement", 14, 22);
-  doc.setFontSize(10);
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
-  
+  doc.setFontSize(18); doc.text("Demande d'Achat / Réapprovisionnement", 14, 22);
+  doc.setFontSize(10); doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
   const body = low.map(p => {
     const sup = suppliers.find(s => s.id === p.supplier_id);
-    const toOrder = p.thresh * 2 - p.qty; // Order up to double threshold
+    const toOrder = p.thresh * 2 - p.qty;
     return [p.name, p.ref, p.qty, p.thresh, toOrder > 0 ? toOrder : 0, sup ? sup.name : 'Non défini'];
   });
-
-  doc.autoTable({
-    head: [['Pièce', 'Réf', 'Stock Actuel', 'Seuil', 'À Commander', 'Fournisseur']],
-    body: body,
-    startY: 35,
-    theme: 'striped',
-    headStyles: { fillColor: [255, 107, 0] }
-  });
-  
+  doc.autoTable({ head: [['Pièce', 'Réf', 'Stock Actuel', 'Seuil', 'À Commander', 'Fournisseur']], body: body, startY: 35, theme: 'striped', headStyles: { fillColor: [255, 107, 0] } });
   doc.save("Demande_Achat_" + new Date().toISOString().slice(0,10) + ".pdf");
 }
 
-// ===== DASHBOARD =====
 function renderDashboard(){
   updateAlertBadge();
   const totalPieces=pieces.reduce((s,p)=>s+p.qty,0);
   const lowCount=pieces.filter(p=>p.qty<=p.thresh).length;
   const intToday=interventions.filter(i=>i.date===new Date().toISOString().slice(0,10)).length;
   const totalDowntime = interventions.reduce((sum, i) => sum + (parseInt(i.downtime_minutes) || 0), 0);
-  
   document.getElementById('statsGrid').innerHTML=`
     <div class="stat-card"><div class="stat-label">Pièces en stock</div><div class="stat-value">${pieces.length}</div><div class="stat-sub">${totalPieces} unités totales</div></div>
     <div class="stat-card"><div class="stat-label">Alertes stock</div><div class="stat-value" style="color:var(--warn)">${lowCount}</div><div class="stat-sub">Sous le seuil d'alerte</div></div>
@@ -1314,17 +748,13 @@ function renderDashboard(){
   const tbody=document.getElementById('dashInterventions');
   if(!recent.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Aucune intervention enregistrée.</td></tr>';return;}
   tbody.innerHTML=recent.map(i=>`<tr>
-    <td>${i.date} ${i.time}</td>
-    <td><strong>${i.machine||'—'}</strong></td>
-    <td>${i.ligne||'—'}</td>
+    <td>${i.date} ${i.time}</td><td><strong>${i.machine||'—'}</strong></td><td>${i.ligne||'—'}</td>
     <td>${(i.personnel||[]).map(n=>`<span class="personnel-chip">${n}</span>`).join('')}</td>
-    <td>${i.duration} min</td>
-    <td><span class="badge ${i.downtime_minutes > 0 ? 'badge-danger' : 'badge-ok'}">${i.downtime_minutes || 0} min</span></td>
+    <td>${i.duration} min</td><td><span class="badge ${i.downtime_minutes > 0 ? 'badge-danger' : 'badge-ok'}">${i.downtime_minutes || 0} min</span></td>
     <td>${(i.piecesUsed||i.pieces_used||[]).map(u=>`<span class="piece-chip">${u.name} x${u.qty}</span>`).join('')}</td>
   </tr>`).join('');
 }
 
-// ===== STOCK =====
 function renderStock(){
   const q=(document.getElementById('stockSearch')||{}).value||'';
   const list=pieces.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.ref.toLowerCase().includes(q.toLowerCase()));
@@ -1332,12 +762,7 @@ function renderStock(){
   if(!list.length){grid.innerHTML='<div class="empty">Aucune pièce trouvée.</div>';return;}
   grid.innerHTML=list.map(p=>{
     const level=p.qty===0?'danger':p.qty<=p.thresh?'warn':'ok';
-    return `<div class="piece-card ${level}">
-      <div class="piece-name">${p.name}</div>
-      <div class="piece-cat">${p.cat} · ${p.ref}</div>
-      <div class="piece-qty ${level}">${p.qty}</div>
-      <div style="font-size:0.72rem;color:var(--text3);margin-top:4px;">unités · seuil ${p.thresh}</div>
-    </div>`;
+    return `<div class="piece-card ${level}"><div class="piece-name">${p.name}</div><div class="piece-cat">${p.cat} · ${p.ref}</div><div class="piece-qty ${level}">${p.qty}</div><div style="font-size:0.72rem;color:var(--text3);margin-top:4px;">unités · seuil ${p.thresh}</div></div>`;
   }).join('');
 }
 
@@ -1345,27 +770,19 @@ function exportStockPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("Rapport de Stock", 14, 15);
-  doc.autoTable({
-    head: [['Nom', 'Catégorie', 'Réf', 'Qté', 'Seuil']],
-    body: pieces.map(p => [p.name, p.cat, p.ref, p.qty, p.thresh]),
-    startY: 20
-  });
+  doc.autoTable({ head: [['Nom', 'Catégorie', 'Réf', 'Qté', 'Seuil']], body: pieces.map(p => [p.name, p.cat, p.ref, p.qty, p.thresh]), startY: 20 });
   doc.save("Stock_" + new Date().toISOString().slice(0,10) + ".pdf");
 }
 
-// ===== HISTORIQUE =====
 function buildHistoriqueFilters(){
   const fpEl=document.getElementById('filterPers');
   const cur1=fpEl.value;
   fpEl.innerHTML='<option value="">— Tout le personnel —</option>';
-  const allPers=[...new Set(interventions.flatMap(i=>i.personnel||[]))];
-  allPers.forEach(n=>fpEl.innerHTML+=`<option value="${n}" ${cur1===n?'selected':''}>${n}</option>`);
-
+  [...new Set(interventions.flatMap(i=>i.personnel||[]))].forEach(n=>fpEl.innerHTML+=`<option value="${n}" ${cur1===n?'selected':''}>${n}</option>`);
   const fmEl=document.getElementById('filterMachine');
   const cur4=fmEl.value;
   fmEl.innerHTML='<option value="">— Toutes machines —</option>';
-  const allMachines=[...new Set(interventions.map(i=>i.machine||'').filter(Boolean))];
-  allMachines.forEach(n=>fmEl.innerHTML+=`<option value="${n}" ${cur4===n?'selected':''}>${n}</option>`);
+  [...new Set(interventions.map(i=>i.machine||'').filter(Boolean))].forEach(n=>fmEl.innerHTML+=`<option value="${n}" ${cur4===n?'selected':''}>${n}</option>`);
 }
 
 function renderHistorique(){
@@ -1373,32 +790,20 @@ function renderHistorique(){
   const fd=document.getElementById('filterDate').value;
   const fp=document.getElementById('filterPers').value;
   const fm=document.getElementById('filterMachine').value;
-
   let filtered=interventions.filter(i=>{
     if(fd&&i.date!==fd) return false;
     if(fp&&!(i.personnel||[]).includes(fp)) return false;
     if(fm&&i.machine!==fm) return false;
     return true;
   });
-
   filtered=[...filtered].sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
-
   const grouped={};
-  filtered.forEach(i=>{
-    if(!grouped[i.date]) grouped[i.date]=[];
-    grouped[i.date].push(i);
-  });
-
+  filtered.forEach(i=>{ if(!grouped[i.date]) grouped[i.date]=[]; grouped[i.date].push(i); });
   const container=document.getElementById('historiqueContainer');
   if(!filtered.length){container.innerHTML='<div class="empty">Aucune intervention trouvée.</div>';return;}
-
   container.innerHTML=Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).map(date=>`
     <div class="intervention-day">
-      <div class="day-header">
-        <div class="day-line"></div>
-        <div class="day-label">📅 ${formatDate(date)} — ${grouped[date].length} intervention(s)</div>
-        <div class="day-line"></div>
-      </div>
+      <div class="day-header"><div class="day-line"></div><div class="day-label">📅 ${formatDate(date)} — ${grouped[date].length} intervention(s)</div><div class="day-line"></div></div>
       ${grouped[date].map(i=>`
         <div class="intervention-card">
           <div class="intervention-meta">
@@ -1410,11 +815,9 @@ function renderHistorique(){
           </div>
           <div style="margin-bottom:8px;font-size:0.9rem;color:var(--text2);">${i.description||''}</div>
           ${i.photo_url ? `<img src="${i.photo_url}" class="intervention-photo" onclick="window.open('${i.photo_url}', '_blank')">` : ''}
-          <div style="margin-bottom:6px;">
-            👷 Personnel : ${(i.personnel||[]).map(n=>`<span class="personnel-chip">${n}</span>`).join('') || '<em style="color:var(--text3)">—</em>'}
-          </div>
+          <div style="margin-bottom:6px;">👷 Personnel : ${(i.personnel||[]).map(n=>`<span class="personnel-chip">${n}</span>`).join('') || '<em style="color:var(--text3)">—</em>'}</div>
           ${(i.piecesUsed||i.pieces_used&&i.piecesUsed||i.pieces_used.length)?`<div class="pieces-used">🔩 Pièces : ${(i.piecesUsed||i.pieces_used).map(u=>`<span class="piece-chip">${u.name} × ${u.qty}</span>`).join('')}</div>`:''}
-          ${checkPerm('admin')?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteIntervention('${i.id}')">🗑 Supprimer</button></div>`:''}
+          ${currentUser?.role==='admin'?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteIntervention('${i.id}')">🗑 Supprimer</button></div>`:''}
         </div>
       `).join('')}
     </div>
@@ -1425,18 +828,7 @@ function exportHistoriquePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("Historique des Interventions", 14, 15);
-  doc.autoTable({
-    head: [['Date', 'Machine', 'Ligne', 'Personnel', 'Durée', 'Description']],
-    body: interventions.map(i => [
-      `${i.date} ${i.time}`, 
-      i.machine || '-', 
-      i.ligne || '-', 
-      (i.personnel||[]).join(', '), 
-      i.duration + ' min', 
-      i.description || '-'
-    ]),
-    startY: 20
-  });
+  doc.autoTable({ head: [['Date', 'Machine', 'Ligne', 'Personnel', 'Durée', 'Description']], body: interventions.map(i => [`${i.date} ${i.time}`, i.machine || '-', i.ligne || '-', (i.personnel||[]).join(', '), i.duration + ' min', i.description || '-']), startY: 20 });
   doc.save("Historique_" + new Date().toISOString().slice(0,10) + ".pdf");
 }
 
@@ -1457,11 +849,9 @@ async function deleteIntervention(id){
   if(!confirm('Supprimer cette intervention ?')) return;
   await sb.from('interventions').delete().eq('id',id);
   interventions=interventions.filter(i=>i.id!==id);
-  renderHistorique();
-  renderDashboard();
+  renderHistorique(); renderDashboard();
 }
 
-// ===== EMPLOYEES =====
 function renderEmployees(){
   const grid=document.getElementById('empGrid');
   if(!employees.length){grid.innerHTML='<div class="empty">Aucun employé enregistré.</div>';return;}
@@ -1470,7 +860,7 @@ function renderEmployees(){
       <div class="emp-avatar">${e.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
       <div class="emp-name">${e.name}</div>
       <div class="emp-role">${e.role}</div>
-      ${checkPerm('admin')?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteEmployee(${e.id})">🗑</button></div>`:''}
+      ${currentUser?.role==='admin'?`<div style="margin-top:10px;"><button class="btn btn-danger btn-sm" onclick="deleteEmployee(${e.id})">🗑</button></div>`:''}
     </div>
   `).join('');
 }
@@ -1480,13 +870,7 @@ async function addEmployee(){
   const role=document.getElementById('newEmpRole').value.trim();
   if(!name||!role){alert('Renseignez le nom et la profession.');return;}
   const data = await safeInsert('employees', {name, role});
-  if(data) {
-    employees.push(data);
-    document.getElementById('newEmpName').value='';
-    document.getElementById('newEmpRole').value='';
-    alert('Employé ajouté !');
-    renderEmployees();
-  }
+  if(data) { employees.push(data); document.getElementById('newEmpName').value=''; document.getElementById('newEmpRole').value=''; alert('Employé ajouté !'); renderEmployees(); }
 }
 
 async function deleteEmployee(id){
@@ -1496,7 +880,6 @@ async function deleteEmployee(id){
   renderEmployees();
 }
 
-// ===== PIECES ADMIN =====
 async function addPiece(){
   const name=document.getElementById('newPieceName').value.trim();
   const cat=document.getElementById('newPieceCat').value;
@@ -1505,35 +888,23 @@ async function addPiece(){
   const thresh=parseInt(document.getElementById('newPieceThresh').value)||3;
   const ref=document.getElementById('newPieceRef').value.trim()||'—';
   if(!name||!cat){alert('Renseignez le nom et la catégorie.');return;}
-  
   const payload = {name, cat, qty, thresh, ref};
   if(supId) payload.supplier_id = parseInt(supId);
-  
   const data = await safeInsert('pieces', payload);
-  if(data) {
-    pieces.push(data);
-    document.getElementById('newPieceName').value='';
-    document.getElementById('newPieceRef').value='';
-    document.getElementById('newPieceQty').value='1';
-    alert('Pièce ajoutée !');
-    updateAlertBadge();
-  }
+  if(data) { pieces.push(data); document.getElementById('newPieceName').value=''; document.getElementById('newPieceRef').value=''; document.getElementById('newPieceQty').value='1'; alert('Pièce ajoutée !'); updateAlertBadge(); }
 }
 
 function openManagePieces(){
   const tbody=document.getElementById('managePiecesBody');
   tbody.innerHTML=pieces.map(p=>`<tr>
-    <td><strong>${p.name}</strong></td>
-    <td>${p.cat}</td>
+    <td><strong>${p.name}</strong></td><td>${p.cat}</td>
     <td><span class="piece-qty ${p.qty===0?'danger':p.qty<=p.thresh?'warn':'ok'}" style="font-size:1rem">${p.qty}</span></td>
     <td>${p.thresh}</td>
-    <td>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <button class="btn btn-secondary btn-sm" onclick="adjustQty(${p.id},-1)">−</button>
-        <span id="qty_${p.id}" style="font-family:'Share Tech Mono';min-width:28px;text-align:center">${p.qty}</span>
-        <button class="btn btn-secondary btn-sm" onclick="adjustQty(${p.id},1)">+</button>
-      </div>
-    </td>
+    <td><div style="display:flex;align-items:center;gap:6px;">
+      <button class="btn btn-secondary btn-sm" onclick="adjustQty(${p.id},-1)">−</button>
+      <span id="qty_${p.id}" style="font-family:'Share Tech Mono';min-width:28px;text-align:center">${p.qty}</span>
+      <button class="btn btn-secondary btn-sm" onclick="adjustQty(${p.id},1)">+</button>
+    </div></td>
     <td><button class="btn btn-danger btn-sm" onclick="deletePiece(${p.id})">🗑</button></td>
   </tr>`).join('');
   openModal('managePiecesModal');
@@ -1551,28 +922,20 @@ async function deletePiece(id){
   if(!confirm('Supprimer cette pièce ?')) return;
   await sb.from('pieces').delete().eq('id',id);
   pieces=pieces.filter(p=>p.id!==id);
-  openManagePieces();
-  updateAlertBadge();
+  openManagePieces(); updateAlertBadge();
 }
 
-// ===== CATEGORIES =====
 async function addCategory(){
   const name=document.getElementById('newCatName').value.trim();
   if(!name) return;
-  if(!categories.includes(name)){
-    categories.push(name);
-    await sb.from('categories').insert([{id:categories.length,name}]);
-  }
-  document.getElementById('newCatName').value='';
-  renderCatList();
-  refreshCatSelects();
+  if(!categories.includes(name)){ categories.push(name); await sb.from('categories').insert([{id:categories.length,name}]); }
+  document.getElementById('newCatName').value=''; renderCatList(); refreshCatSelects();
 }
 
 function renderCatList(){
   document.getElementById('catList').innerHTML=categories.map((c,i)=>`
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg3);border-radius:6px;margin-bottom:6px;">
-      <span>${c}</span>
-      <button class="btn btn-danger btn-sm" onclick="deleteCategory(${i})">✕</button>
+      <span>${c}</span><button class="btn btn-danger btn-sm" onclick="deleteCategory(${i})">✕</button>
     </div>
   `).join('');
 }
@@ -1585,24 +948,13 @@ async function deleteCategory(i){
 
 function refreshCatSelects(){
   const opts=categories.map(c=>`<option value="${c}">${c}</option>`).join('');
-  ['newPieceCat'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.innerHTML='<option value="">— Choisir —</option>'+opts;
-  });
+  ['newPieceCat'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML='<option value="">— Choisir —</option>'+opts; });
 }
 
-// ===== SUPPLIERS =====
 function renderSuppliers() {
   const tbody = document.getElementById('suppliersTableBody');
   if(!suppliers.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Aucun fournisseur.</td></tr>'; return; }
-  tbody.innerHTML = suppliers.map(s => `
-    <tr>
-      <td><strong>${s.name}</strong></td>
-      <td>${s.contact || '-'}</td>
-      <td>${s.lead_time_days} jours</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteSupplier(${s.id})">🗑</button></td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = suppliers.map(s => `<tr><td><strong>${s.name}</strong></td><td>${s.contact || '-'}</td><td>${s.lead_time_days} jours</td><td><button class="btn btn-danger btn-sm" onclick="deleteSupplier(${s.id})">🗑</button></td></tr>`).join('');
 }
 
 function openAddSupplier() { openModal('supplierModal'); }
@@ -1612,22 +964,15 @@ async function saveSupplier() {
   const contact = document.getElementById('supContact').value.trim();
   const lead = parseInt(document.getElementById('supLead').value) || 7;
   if(!name) return alert('Nom requis');
-  
   const data = await safeInsert('suppliers', {name, contact, lead_time_days: lead});
-  if(data) {
-    suppliers.push(data);
-    closeModal('supplierModal');
-    renderSuppliers();
-    refreshSupplierSelects();
-  }
+  if(data) { suppliers.push(data); closeModal('supplierModal'); renderSuppliers(); refreshSupplierSelects(); }
 }
 
 async function deleteSupplier(id) {
   if(!confirm('Supprimer ?')) return;
   await sb.from('suppliers').delete().eq('id', id);
   suppliers = suppliers.filter(s => s.id !== id);
-  renderSuppliers();
-  refreshSupplierSelects();
+  renderSuppliers(); refreshSupplierSelects();
 }
 
 function refreshSupplierSelects() {
@@ -1636,16 +981,12 @@ function refreshSupplierSelects() {
   if(el) el.innerHTML = '<option value="">— Aucun —</option>' + opts;
 }
 
-// ===== LIGNES & MACHINES (WITH QR) =====
 async function addLigne(){
   const name=document.getElementById('newLigneName').value.trim();
   if(!name) return;
   const{data,error}=await sb.from('lignes').insert([{name}]).select().single();
   if(error){alert('Erreur: '+error.message);return;}
-  lignes.push(data);
-  document.getElementById('newLigneName').value='';
-  renderLigneList();
-  refreshLigneSelects();
+  lignes.push(data); document.getElementById('newLigneName').value=''; renderLigneList(); refreshLigneSelects();
 }
 
 async function deleteLigne(id){
@@ -1658,14 +999,12 @@ async function deleteLigne(id){
 }
 
 function renderLigneList(){
-  const el=document.getElementById('ligneList');
-  if(!el) return;
+  const el=document.getElementById('ligneList'); if(!el) return;
   el.innerHTML=lignes.map(l=>{
     const macs=machines.filter(m=>(m.ligne_id||m.ligneId)===l.id);
     return `<div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <strong>${l.name}</strong>
-        <button class="btn btn-danger btn-sm" onclick="deleteLigne(${l.id})">✕</button>
+        <strong>${l.name}</strong><button class="btn btn-danger btn-sm" onclick="deleteLigne(${l.id})">✕</button>
       </div>
       ${macs.length?macs.map(m=>`<span style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:0.78rem;margin:2px;display:inline-flex;align-items:center;gap:6px;">
         ${m.name} 
@@ -1680,13 +1019,7 @@ function showMachineQR(id, name) {
   document.getElementById('qrModalTitle').textContent = `QR: ${name}`;
   const url = `${window.location.origin}${window.location.pathname}#machine=${id}`;
   const canvas = document.getElementById('qrCanvas');
-  new QRious({
-    element: canvas,
-    value: url,
-    size: 250,
-    foreground: '#0a0e1a',
-    background: '#ffffff'
-  });
+  new QRious({ element: canvas, value: url, size: 250, foreground: '#0a0e1a', background: '#ffffff' });
   openModal('qrModal');
 }
 
@@ -1694,11 +1027,7 @@ function checkURLHash() {
   if(window.location.hash.startsWith('#machine=')) {
     const mId = parseInt(window.location.hash.split('=')[1]);
     const m = machines.find(x => x.id === mId);
-    if(m) {
-      showPage('historique');
-      document.getElementById('filterMachine').value = m.name;
-      renderHistorique();
-    }
+    if(m) { showPage('historique'); document.getElementById('filterMachine').value = m.name; renderHistorique(); }
   }
 }
 
@@ -1707,11 +1036,7 @@ async function addMachine(){
   const ligneId=parseInt(document.getElementById('newMachineLigne').value);
   if(!name||!ligneId){alert('Renseignez le nom et la ligne.');return;}
   const data = await safeInsert('machines', {name, ligne_id: ligneId});
-  if(data) {
-    machines.push(data);
-    document.getElementById('newMachineName').value='';
-    renderLigneList();
-  }
+  if(data) { machines.push(data); document.getElementById('newMachineName').value=''; renderLigneList(); }
 }
 
 async function deleteMachine(id){
@@ -1722,10 +1047,7 @@ async function deleteMachine(id){
 
 function refreshLigneSelects(){
   const opts=lignes.map(l=>`<option value="${l.name}">${l.name}</option>`).join('');
-  ['intLigne'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.innerHTML='<option value="">— Choisir une ligne —</option>'+opts;
-  });
+  ['intLigne'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML='<option value="">— Choisir une ligne —</option>'+opts; });
   const ml=document.getElementById('newMachineLigne');
   if(ml) ml.innerHTML='<option value="">— Choisir —</option>'+lignes.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
   updateMachineSelect();
@@ -1738,66 +1060,44 @@ function updateMachineSelect(){
   document.getElementById('intMachine').innerHTML='<option value="">— Choisir une machine —</option>'+macs.map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
 }
 
-// ===== ADMIN PAGE =====
 function renderAdmin(){
-  refreshCatSelects();
-  renderCatList();
-  refreshLigneSelects();
-  renderLigneList();
-  refreshSupplierSelects();
+  refreshCatSelects(); renderCatList(); refreshLigneSelects(); renderLigneList(); refreshSupplierSelects();
 }
 
-// ===== WORK ORDERS =====
 function renderWorkOrders() {
   const tbody = document.getElementById('woTableBody');
   if(!workOrders.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun ordre de travail.</td></tr>'; return; }
-  
   tbody.innerHTML = workOrders.map(wo => {
     const statusClass = wo.status === 'done' ? 'badge-ok' : (wo.status === 'in_progress' ? 'badge-warn' : 'badge-info');
     const statusLabel = wo.status === 'done' ? 'Terminé' : (wo.status === 'in_progress' ? 'En cours' : 'Assigné');
-    
     let actions = '';
-    if(checkPerm('update_wo')) {
+    if(currentUser?.role === 'admin' || currentUser?.role === 'technician') {
       if(wo.status === 'assigned') actions = `<button class="btn btn-primary btn-sm" onclick="updateWOStatus(${wo.id}, 'in_progress')">▶ Démarrer</button>`;
       else if(wo.status === 'in_progress') actions = `<button class="btn btn-orange btn-sm" onclick="updateWOStatus(${wo.id}, 'done')">✓ Terminer</button>`;
       else actions = '<span style="color:var(--accent3);">✓ Fait</span>';
     }
-    
-    return `<tr>
-      <td><strong>${wo.machine_name}</strong></td>
-      <td>${wo.description}</td>
-      <td>${wo.assigned_to}</td>
-      <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-      <td>${actions}</td>
-    </tr>`;
+    return `<tr><td><strong>${wo.machine_name}</strong></td><td>${wo.description}</td><td>${wo.assigned_to}</td><td><span class="badge ${statusClass}">${statusLabel}</span></td><td>${actions}</td></tr>`;
   }).join('');
 }
 
 function openAddWO() {
-  if (!isAdmin) { openLogin(); return; } 
+  if (!currentUser || currentUser.role !== 'admin') { openLogin(); return; }
   const mSelect = document.getElementById('woMachine');
-  mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-  
+  if (mSelect) mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
   const aSelect = document.getElementById('woAssigned');
-  aSelect.innerHTML = employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
-  
+  if (aSelect) aSelect.innerHTML = employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
   openModal('woModal');
 }
 
 async function saveWO() {
   const machine = document.getElementById('woMachine').value;
-  const desc = document.getElementById('woDesc').value;
+  const desc = document.getElementById('woDesc').value.trim();
   const assigned = document.getElementById('woAssigned').value;
-  if(!desc) return alert('Description requise');
-  
-  const data = await safeInsert('work_orders', {
-    machine_name: machine, description: desc, assigned_to: assigned, status: 'assigned'
-  });
-  if(data) {
-    workOrders.unshift(data);
-    closeModal('woModal');
-    renderWorkOrders();
-  }
+  if(!desc) return alert('La description est requise');
+  if(!machine) return alert('Veuillez sélectionner une machine');
+  const { data, error } = await sb.from('work_orders').insert([{ machine_name: machine, description: desc, assigned_to: assigned, status: 'assigned' }]).select().single();
+  if (error) { console.error("Supabase Error:", error); alert("Erreur lors de l'ajout : " + error.message); return; }
+  workOrders.unshift(data); closeModal('woModal'); renderWorkOrders(); alert("✅ Ordre de travail créé avec succès !");
 }
 
 async function updateWOStatus(id, status) {
@@ -1808,47 +1108,33 @@ async function updateWOStatus(id, status) {
   renderWorkOrders();
 }
 
-// ===== PLANNED MAINTENANCE =====
 function renderPlanned() {
   const tbody = document.getElementById('plannedTableBody');
   if(!plannedMaint.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucune maintenance planifiée.</td></tr>'; return; }
-  
   tbody.innerHTML = plannedMaint.map(pm => {
     const isDue = pm.next_due && new Date(pm.next_due) <= new Date();
-    return `<tr>
-      <td><strong>${pm.machine_name}</strong></td>
-      <td>${pm.description}</td>
-      <td>Tous les ${pm.interval_days} jours</td>
-      <td><span class="badge ${isDue ? 'badge-danger' : 'badge-ok'}">${pm.next_due ? new Date(pm.next_due).toLocaleDateString() : 'N/A'}</span></td>
-      <td><button class="btn btn-danger btn-sm" onclick="deletePlanned(${pm.id})">🗑</button></td>
-    </tr>`;
+    return `<tr><td><strong>${pm.machine_name}</strong></td><td>${pm.description}</td><td>Tous les ${pm.interval_days} jours</td><td><span class="badge ${isDue ? 'badge-danger' : 'badge-ok'}">${pm.next_due ? new Date(pm.next_due).toLocaleDateString() : 'N/A'}</span></td><td><button class="btn btn-danger btn-sm" onclick="deletePlanned(${pm.id})">🗑</button></td></tr>`;
   }).join('');
 }
 
 function openAddPlanned() {
-  if (!isAdmin) { openLogin(); return; }
+  if (!currentUser || currentUser.role !== 'admin') { openLogin(); return; }
   const mSelect = document.getElementById('pmMachine');
-  mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  if (mSelect) mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
   openModal('plannedModal');
 }
 
 async function savePlanned() {
   const machine = document.getElementById('pmMachine').value;
-  const desc = document.getElementById('pmDesc').value;
+  const desc = document.getElementById('pmDesc').value.trim();
   const interval = parseInt(document.getElementById('pmInterval').value);
-  if(!desc) return alert('Tâche requise');
-  
-  const next = new Date();
-  next.setDate(next.getDate() + interval);
-  
-  const data = await safeInsert('planned_maintenance', {
-    machine_name: machine, description: desc, interval_days: interval, next_due: next.toISOString()
-  });
-  if(data) {
-    plannedMaint.push(data);
-    closeModal('plannedModal');
-    renderPlanned();
-  }
+  if(!desc) return alert('La tâche est requise');
+  if(!machine) return alert('Veuillez sélectionner une machine');
+  if(!interval || interval < 1) return alert('L\'intervalle doit être d\'au moins 1 jour');
+  const next = new Date(); next.setDate(next.getDate() + interval);
+  const { data, error } = await sb.from('planned_maintenance').insert([{ machine_name: machine, description: desc, interval_days: interval, next_due: next.toISOString().split('T')[0] }]).select().single();
+  if (error) { console.error("Supabase Error:", error); alert("Erreur lors de l'ajout : " + error.message); return; }
+  plannedMaint.push(data); closeModal('plannedModal'); renderPlanned(); alert("✅ Maintenance planifiée avec succès !");
 }
 
 async function deletePlanned(id) {
@@ -1858,84 +1144,32 @@ async function deletePlanned(id) {
   renderPlanned();
 }
 
-// ===== ANALYTICS =====
 function renderAnalytics() {
-  // Destroy old charts to prevent canvas reuse errors
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
-  
-  Chart.defaults.color = '#8899b4';
-  Chart.defaults.borderColor = '#1e2d4d';
-
-  // 1. Stats calculations
+  Object.values(charts).forEach(c => c.destroy()); charts = {};
+  Chart.defaults.color = '#8899b4'; Chart.defaults.borderColor = '#1e2d4d';
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
   const weekInts = interventions.filter(i => new Date(i.date) >= weekAgo).length;
   const totalDowntime = interventions.reduce((s, i) => s + (parseInt(i.downtime_minutes) || 0), 0);
-  
   document.getElementById('statWeek').textContent = weekInts;
   document.getElementById('statDowntime').textContent = Math.round(totalDowntime / 60) + 'h';
   document.getElementById('statMTBF').textContent = (machines.length > 0 && interventions.length > 0) ? Math.round((interventions.length / machines.length) * 10) + 'h' : '--';
-
-  // 2. Chart Data Prep
-  const machineCounts = {};
-  const machineDowntime = {};
-  const partCounts = {};
-  
+  const machineCounts = {}, machineDowntime = {}, partCounts = {};
   interventions.forEach(i => {
     machineCounts[i.machine] = (machineCounts[i.machine] || 0) + 1;
     machineDowntime[i.machine] = (machineDowntime[i.machine] || 0) + (parseInt(i.downtime_minutes) || 0);
-    (i.piecesUsed || i.pieces_used || []).forEach(p => {
-      partCounts[p.name] = (partCounts[p.name] || 0) + p.qty;
-    });
+    (i.piecesUsed || i.pieces_used || []).forEach(p => { partCounts[p.name] = (partCounts[p.name] || 0) + p.qty; });
   });
-
-  // 3. Draw Charts
-  charts.machines = new Chart(document.getElementById('chartMachines'), {
-    type: 'bar',
-    data: {
-      labels: Object.keys(machineCounts),
-      datasets: [{ label: 'Interventions', data: Object.values(machineCounts), backgroundColor: '#00c8ff' }]
-    },
-    options: { responsive: true, maintainAspectRatio: true }
-  });
-
-  charts.downtime = new Chart(document.getElementById('chartDowntime'), {
-    type: 'bar',
-    data: {
-      labels: Object.keys(machineDowntime),
-      datasets: [{ label: 'Minutes d\'arrêt', data: Object.values(machineDowntime), backgroundColor: '#ff3b5c' }]
-    },
-    options: { responsive: true, maintainAspectRatio: true }
-  });
-
-  charts.parts = new Chart(document.getElementById('chartParts'), {
-    type: 'doughnut',
-    data: {
-      labels: Object.keys(partCounts).slice(0, 5),
-      datasets: [{ data: Object.values(partCounts).slice(0, 5), backgroundColor: ['#00c8ff', '#ff6b00', '#00ff9d', '#ffb800', '#ff3b5c'] }]
-    },
-    options: { responsive: true, maintainAspectRatio: true }
-  });
-  
-  // Mock weekly trend
-  charts.week = new Chart(document.getElementById('chartWeek'), {
-    type: 'line',
-    data: {
-      labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-      datasets: [{ label: 'Interventions', data: [2, 4, 3, 5, 2, 1, 0], borderColor: '#00ff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(0,255,157,0.1)' }]
-    },
-    options: { responsive: true, maintainAspectRatio: true }
-  });
+  charts.machines = new Chart(document.getElementById('chartMachines'), { type: 'bar', data: { labels: Object.keys(machineCounts), datasets: [{ label: 'Interventions', data: Object.values(machineCounts), backgroundColor: '#00c8ff' }] }, options: { responsive: true, maintainAspectRatio: true } });
+  charts.downtime = new Chart(document.getElementById('chartDowntime'), { type: 'bar', data: { labels: Object.keys(machineDowntime), datasets: [{ label: 'Minutes d\'arrêt', data: Object.values(machineDowntime), backgroundColor: '#ff3b5c' }] }, options: { responsive: true, maintainAspectRatio: true } });
+  charts.parts = new Chart(document.getElementById('chartParts'), { type: 'doughnut', data: { labels: Object.keys(partCounts).slice(0, 5), datasets: [{ data: Object.values(partCounts).slice(0, 5), backgroundColor: ['#00c8ff', '#ff6b00', '#00ff9d', '#ffb800', '#ff3b5c'] }] }, options: { responsive: true, maintainAspectRatio: true } });
+  charts.week = new Chart(document.getElementById('chartWeek'), { type: 'line', data: { labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'], datasets: [{ label: 'Interventions', data: [2, 4, 3, 5, 2, 1, 0], borderColor: '#00ff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(0,255,157,0.1)' }] }, options: { responsive: true, maintainAspectRatio: true } });
 }
 
-// ===== ADD INTERVENTION =====
-let selectedPiecesMap={};
-let selectedPersonnel=[];
+let selectedPiecesMap={}, selectedPersonnel=[];
 
 function openAddIntervention(){
-  if(!checkPerm('add_intervention')){openLogin();return;}
-  selectedPiecesMap={};
-  selectedPersonnel=[];
+  if(!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'technician')){ openLogin(); return; }
+  selectedPiecesMap={}; selectedPersonnel=[];
   const now=new Date();
   document.getElementById('intDate').value=now.toISOString().slice(0,10);
   document.getElementById('intTime').value=now.toTimeString().slice(0,5);
@@ -1943,41 +1177,24 @@ function openAddIntervention(){
   document.getElementById('intDowntime').value='';
   document.getElementById('intDesc').value='';
   document.getElementById('intPhoto').value='';
-
   const pm=document.getElementById('personnelMulti');
   pm.innerHTML=employees.map(e=>`<div class="pers-chip" data-name="${e.name}" onclick="togglePersonnel(this,'${e.name}')">${e.name}</div>`).join('');
-
   refreshLigneSelects();
-
   const psl=document.getElementById('pieceSelectorList');
-  psl.innerHTML=pieces.filter(p=>p.qty>0).map(p=>`
-    <div class="piece-sel-item" data-id="${p.id}" onclick="togglePiece(${p.id},'${p.name.replace(/'/g,"\\'")}',${p.qty})">
-      <span>${p.name}</span><span style="color:var(--text3);font-size:0.72rem">[${p.qty}]</span>
-    </div>
-  `).join('');
+  psl.innerHTML=pieces.filter(p=>p.qty>0).map(p=>`<div class="piece-sel-item" data-id="${p.id}" onclick="togglePiece(${p.id},'${p.name.replace(/'/g,"\\'")}',${p.qty})"><span>${p.name}</span><span style="color:var(--text3);font-size:0.72rem">[${p.qty}]</span></div>`).join('');
   renderSelectedPiecesQty();
   openModal('interventionModal');
 }
 
 function togglePersonnel(el,name){
-  if(el.classList.contains('selected')){
-    el.classList.remove('selected');
-    selectedPersonnel=selectedPersonnel.filter(n=>n!==name);
-  } else {
-    el.classList.add('selected');
-    selectedPersonnel.push(name);
-  }
+  if(el.classList.contains('selected')){ el.classList.remove('selected'); selectedPersonnel=selectedPersonnel.filter(n=>n!==name); }
+  else { el.classList.add('selected'); selectedPersonnel.push(name); }
 }
 
 function togglePiece(id,name,maxQty){
   const el=document.querySelector(`.piece-sel-item[data-id="${id}"]`);
-  if(selectedPiecesMap[id]){
-    delete selectedPiecesMap[id];
-    el.classList.remove('selected');
-  } else {
-    selectedPiecesMap[id]={name,qty:1,maxQty};
-    el.classList.add('selected');
-  }
+  if(selectedPiecesMap[id]){ delete selectedPiecesMap[id]; el.classList.remove('selected'); }
+  else { selectedPiecesMap[id]={name,qty:1,maxQty}; el.classList.add('selected'); }
   renderSelectedPiecesQty();
 }
 
@@ -1986,16 +1203,12 @@ function renderSelectedPiecesQty(){
   const selected=Object.entries(selectedPiecesMap);
   if(!selected.length){container.innerHTML='';return;}
   container.innerHTML=`<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:8px;">`+
-    selected.map(([id,{name,qty,maxQty}])=>`
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span class="piece-chip" style="flex:1">${name}</span>
-        <label style="font-size:0.75rem;color:var(--text2)">Qté:</label>
-        <input type="number" min="1" max="${maxQty}" value="${qty}"
-          style="width:60px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Exo 2',sans-serif;"
-          onchange="updatePieceQty(${id},this.value,${maxQty})">
-        <span style="font-size:0.72rem;color:var(--text3)">/ ${maxQty}</span>
-      </div>
-    `).join('')+`</div>`;
+    selected.map(([id,{name,qty,maxQty}])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span class="piece-chip" style="flex:1">${name}</span>
+      <label style="font-size:0.75rem;color:var(--text2)">Qté:</label>
+      <input type="number" min="1" max="${maxQty}" value="${qty}" style="width:60px;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Exo 2',sans-serif;" onchange="updatePieceQty(${id},this.value,${maxQty})">
+      <span style="font-size:0.72rem;color:var(--text3)">/ ${maxQty}</span>
+    </div>`).join('')+`</div>`;
 }
 
 function updatePieceQty(id,val,max){
@@ -2012,8 +1225,7 @@ function compressImage(file) {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 1024;
         const scaleSize = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scaleSize;
+        canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         resolve(canvas.toDataURL('image/jpeg', 0.6));
@@ -2032,10 +1244,9 @@ async function saveIntervention(){
   const description=document.getElementById('intDesc').value.trim();
   const ligne=document.getElementById('intLigne').value;
   const machine=document.getElementById('intMachine').value;
-
   if(!date||!time){alert('Renseignez la date et l\'heure.');return;}
   if(!selectedPersonnel.length){alert('Sélectionnez au moins un technicien.');return;}
-
+  
   let photoUrl = '';
   const photoInput = document.getElementById('intPhoto');
   if(photoInput.files && photoInput.files[0]) {
@@ -2049,38 +1260,22 @@ async function saveIntervention(){
     const piece=pieces.find(p=>p.id===parseInt(id));
     if(piece){
       if(piece.qty<qty){alert(`Stock insuffisant pour : ${name} (disponible: ${piece.qty})`);return;}
-      piece.qty-=qty;
-      piecesUsed.push({name,qty});
+      piece.qty-=qty; piecesUsed.push({name,qty});
     }
   }
-  
-  for(const p of pieces){
-    await sb.from('pieces').update({qty:p.qty}).eq('id',p.id);
-  }
+  for(const p of pieces) await sb.from('pieces').update({qty:p.qty}).eq('id',p.id);
   updateAlertBadge();
 
   const newInt={
-    id:'int_'+Date.now(),
-    date, time, duration, downtime_minutes: downtime, description,
-    ligne, machine,
-    personnel:selectedPersonnel,
-    pieces_used:piecesUsed,
-    photo_url: photoUrl
+    id:'int_'+Date.now(), date, time, duration, downtime_minutes: downtime, description, ligne, machine,
+    personnel:selectedPersonnel, pieces_used:piecesUsed, photo_url: photoUrl
   };
-  
   showLoader('Enregistrement...');
   const data = await safeInsert('interventions', newInt);
   hideLoader();
-  
-  if(data) {
-    interventions.unshift(data);
-    closeModal('interventionModal');
-    showPage('historique');
-    renderHistorique();
-  }
+  if(data) { interventions.unshift(data); closeModal('interventionModal'); showPage('historique'); renderHistorique(); }
 }
 
-// ===== INIT =====
 loadAllData();
 </script>
 </body>

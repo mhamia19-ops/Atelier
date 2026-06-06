@@ -1772,15 +1772,19 @@ function renderWorkOrders() {
     </tr>`;
   }).join('');
 }
-
 function openAddWO() {
-  if (!isAdmin) { openLogin(); return; } 
+  if (!currentUser || currentUser.role !== 'admin') { 
+    openLogin(); 
+    return; 
+  }
   const mSelect = document.getElementById('woMachine');
-  mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-  
+  if (mSelect) {
+    mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  }
   const aSelect = document.getElementById('woAssigned');
-  aSelect.innerHTML = employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
-  
+  if (aSelect) {
+    aSelect.innerHTML = employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+  }
   openModal('woModal');
 }
 
@@ -1824,11 +1828,18 @@ function renderPlanned() {
     </tr>`;
   }).join('');
 }
-
 function openAddPlanned() {
-  if (!isAdmin) { openLogin(); return; }
+  // Check if user is logged in AND is an admin
+  if (!currentUser || currentUser.role !== 'admin') { 
+    openLogin(); 
+    return; 
+  }
+  
   const mSelect = document.getElementById('pmMachine');
-  mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  if (mSelect) {
+    mSelect.innerHTML = machines.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  }
+  
   openModal('plannedModal');
 }
 
